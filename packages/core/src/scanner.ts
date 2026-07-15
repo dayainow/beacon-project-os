@@ -66,6 +66,10 @@ const MAX_FILES = 10_000;
 const MAX_GIT_COMMITS = 20;
 const MAX_TIMELINE_EVENTS = 30;
 
+function isGeneratedProjectBook(relativePath: string): boolean {
+  return relativePath.replace(/\\/g, "/").split("/").pop()?.toLowerCase() === "project_book.md";
+}
+
 export type ArtifactKind =
   | "overview"
   | "planning"
@@ -233,11 +237,12 @@ async function scanFiles(root: string): Promise<FileObservation> {
       }
 
       if (!entry.isFile()) continue;
-      total += 1;
-
-      const extension = path.extname(entry.name).toLowerCase();
       const lowerName = entry.name.toLowerCase();
       const relativePath = toProjectPath(path.relative(root, absolutePath));
+      if (isGeneratedProjectBook(relativePath)) continue;
+
+      total += 1;
+      const extension = path.extname(entry.name).toLowerCase();
       if (SOURCE_EXTENSIONS.has(extension)) {
         source += 1;
         if (isTestSource(relativePath)) tests += 1;
@@ -291,7 +296,7 @@ function parseGitChanges(value: string | null): GitChange[] {
     const record = records[index];
     const status = record.slice(0, 2).trim() || "?";
     const filePath = record.slice(3);
-    changes.push({ path: filePath, status });
+    if (!isGeneratedProjectBook(filePath)) changes.push({ path: filePath, status });
 
     if (/[RC]/.test(record.slice(0, 2)) && records[index + 1]) index += 1;
   }
@@ -314,7 +319,9 @@ function parseGitCommits(value: string | null): GitCommit[] {
         shortHash,
         authoredAt,
         subject: subject.join("\u001f"),
-        paths: pathLines.map((filePath) => filePath.trim()).filter(Boolean),
+        paths: pathLines
+          .map((filePath) => filePath.trim())
+          .filter((filePath) => Boolean(filePath) && !isGeneratedProjectBook(filePath)),
       };
     })
     .filter((commit) => Boolean(commit.hash && commit.shortHash && commit.authoredAt));

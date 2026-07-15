@@ -108,6 +108,24 @@ Beacon은 실제 프로젝트 폴더를 프로젝트 그 자체로 취급한다.
 - 각 요구조건은 충족 여부, 근거, 출처와 다음 행동을 제공한다.
 - 자동 관찰은 Gate 준비도만 설명하며 GO·HOLD·KILL 결정이나 승인을 대신하지 않는다.
 
+### 6. Project Book Export
+
+```text
+Project Identity + 현재 Snapshot + append-only History
+→ beacon export
+→ 프로젝트 과정과 현재 상태를 설명하는 PROJECT_BOOK.md
+```
+
+#### 인수 조건
+
+- 내보내기 직전에 현재 프로젝트를 스캔하고 변경된 기준선을 History에 저장한다.
+- 프로젝트 정체성, 현재 Health, P0–P4 Gate 준비도와 부족한 요구조건을 포함한다.
+- 발견한 산출물, 스캔 사이의 변화와 누적 Timeline을 출처와 함께 포함한다.
+- 기본 출력은 프로젝트 루트의 `PROJECT_BOOK.md`이며 `--output`으로 위치를 바꿀 수 있다.
+- 생성된 `PROJECT_BOOK.md`는 다음 자동 관찰에서 제외해 내보내기 자체가 변화 이력을 만들지 않는다.
+- 공유 가능한 문서에 사용자 컴퓨터의 프로젝트 절대 경로를 포함하지 않는다.
+- 자동 생성 문서임과 사람의 Gate 승인을 대신하지 않음을 명시한다.
+
 ## MVP
 
 - 단일 로컬 프로젝트 폴더

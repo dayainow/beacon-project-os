@@ -3,6 +3,9 @@ import { renderDashboard } from "@beacon/dashboard";
 import { createServer, type Server } from "node:http";
 import { ProjectHistoryStore } from "./historyStore.js";
 
+export { ProjectHistoryStore } from "./historyStore.js";
+export type { ProjectHistory, SnapshotRecordResult, StoredProjectChange } from "./historyStore.js";
+
 export interface StartRuntimeOptions {
   root: string;
   port?: number;

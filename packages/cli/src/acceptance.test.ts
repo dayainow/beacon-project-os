@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, unlink, utimes, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, unlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -214,6 +214,48 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.equal(history.changeCount, 4);
   assert.equal(history.changes.length, 4);
   assert.ok(history.timelineCount >= 3);
+
+  const exported = spawnSync(process.execPath, [
+    cliPath,
+    "export",
+    "--root",
+    root,
+    "--output",
+    "docs/PROJECT_BOOK.md",
+  ], { encoding: "utf8" });
+  assert.equal(exported.status, 0, exported.stderr);
+  const exportResult = JSON.parse(exported.stdout) as {
+    outputPath: string;
+    snapshotCount: number;
+    changeCount: number;
+    timelineCount: number;
+  };
+  assert.equal(exportResult.outputPath, path.join(root, "docs", "PROJECT_BOOK.md"));
+  assert.equal(exportResult.snapshotCount, 2);
+  assert.equal(exportResult.changeCount, 4);
+  assert.ok(exportResult.timelineCount >= 3);
+
+  const projectBook = await readFile(exportResult.outputPath, "utf8");
+  assert.match(projectBook, /^# observed-project Project Book/m);
+  assert.match(projectBook, /## P0–P4 Gate 준비도/);
+  assert.match(projectBook, /`docs\/ARCHITECTURE\.md`/);
+  assert.match(projectBook, /## 스캔 사이의 변화/);
+  assert.match(projectBook, /## Project Timeline/);
+  assert.doesNotMatch(projectBook, new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+
+  const defaultExport = spawnSync(process.execPath, [cliPath, "export", "--root", root], {
+    encoding: "utf8",
+  });
+  assert.equal(defaultExport.status, 0, defaultExport.stderr);
+  const defaultExportResult = JSON.parse(defaultExport.stdout) as {
+    outputPath: string;
+    snapshotCount: number;
+    changeCount: number;
+  };
+  assert.equal(defaultExportResult.outputPath, path.join(root, "PROJECT_BOOK.md"));
+  assert.equal(defaultExportResult.snapshotCount, 2);
+  assert.equal(defaultExportResult.changeCount, 4);
+  assert.match(await readFile(defaultExportResult.outputPath, "utf8"), /^# observed-project Project Book/m);
 
   const dashboardResponse = await fetch(url);
   assert.equal(dashboardResponse.status, 200);

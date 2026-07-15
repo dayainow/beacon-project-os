@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
-import { initializeProject, readProjectIdentity } from "@beacon/core";
-import { startBeaconRuntime } from "@beacon/runtime";
+import {
+  generateProjectBook,
+  initializeProject,
+  readProjectIdentity,
+  scanProject,
+} from "@beacon/core";
+import { ProjectHistoryStore, startBeaconRuntime } from "@beacon/runtime";
 import { spawn } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 interface ParsedArguments {
@@ -10,6 +16,7 @@ interface ParsedArguments {
   root: string;
   port: number;
   openBrowser: boolean;
+  output: string | null;
 }
 
 function parseArguments(argv: string[]): ParsedArguments {
@@ -17,6 +24,7 @@ function parseArguments(argv: string[]): ParsedArguments {
   let root = process.cwd();
   let port = 4300;
   let openBrowser = true;
+  let output: string | null = null;
 
   for (let index = 0; index < rest.length; index += 1) {
     const argument = rest[index];
@@ -27,12 +35,15 @@ function parseArguments(argv: string[]): ParsedArguments {
       if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("올바른 포트를 입력하세요.");
     } else if (argument === "--no-browser") {
       openBrowser = false;
+    } else if (argument === "--output") {
+      output = rest[++index] ?? null;
+      if (!output) throw new Error("내보낼 파일 경로를 입력하세요.");
     } else {
       throw new Error(`알 수 없는 옵션입니다: ${argument}`);
     }
   }
 
-  return { command, root, port, openBrowser };
+  return { command, root, port, openBrowser, output };
 }
 
 function openUrl(url: string): void {
@@ -48,7 +59,8 @@ function printHelp(): void {
 Usage:
   beacon init [--root PATH]
   beacon open [--root PATH] [--port PORT] [--no-browser]
-  beacon identity [--root PATH]`);
+  beacon identity [--root PATH]
+  beacon export [--root PATH] [--output PATH]`);
 }
 
 async function main(): Promise<void> {
@@ -72,6 +84,30 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (options.command === "export") {
+    const identity = await readProjectIdentity(options.root);
+    const snapshot = await scanProject(options.root);
+    const historyStore = new ProjectHistoryStore(options.root);
+    let history;
+    try {
+      historyStore.record(snapshot);
+      history = historyStore.history(200);
+    } finally {
+      historyStore.close();
+    }
+
+    const outputPath = path.resolve(options.root, options.output ?? "PROJECT_BOOK.md");
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, generateProjectBook({ identity, snapshot, history }), "utf8");
+    console.log(JSON.stringify({
+      outputPath,
+      snapshotCount: history.snapshotCount,
+      changeCount: history.changeCount,
+      timelineCount: history.timelineCount,
+    }, null, 2));
+    return;
+  }
+
   printHelp();
   if (options.command) process.exitCode = 1;
 }
@@ -80,4 +116,3 @@ main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
 });
-
