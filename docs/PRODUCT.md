@@ -129,6 +129,25 @@ Project Identity + 현재 Snapshot + append-only History
 - 공유 가능한 문서에 사용자 컴퓨터의 프로젝트 절대 경로를 포함하지 않는다.
 - 자동 생성 문서임과 사람의 Gate 승인을 대신하지 않음을 명시한다.
 
+### 7. Project Journey — Cycle Start
+
+```text
+프로젝트 시작 시점
+→ Cycle 이름과 목표 기록
+→ 현재 Snapshot을 시작 기준선으로 고정
+→ Dashboard에서 현재 Cycle과 시작 상태 표시
+```
+
+#### 인수 조건
+
+- `beacon cycle start "이름" --goal "목표"`로 하나의 진행 중 Cycle을 시작한다.
+- Cycle은 순번, 이름, 목표, 시작 시각과 상태를 가진다.
+- 시작 순간의 Snapshot ID, Git HEAD와 핵심 산출물 경로를 기준선으로 보존한다.
+- 진행 중 Cycle이 있으면 새 Cycle 시작을 막고 기존 Cycle 이름을 알려준다.
+- 사용자가 정한 Cycle 의도는 `.beacon/journey.json`에 버전 관리 가능한 원본으로 저장한다.
+- Dashboard는 현재 Cycle과 목표, 시작 기준선을 자동 관찰 결과보다 먼저 보여준다.
+- 첫 세로 흐름은 Cycle 시작과 조회까지만 포함하며, 종료 요약과 Cycle별 Project Book은 다음 흐름에서 추가한다.
+
 ## MVP
 
 - 단일 로컬 프로젝트 폴더
@@ -139,6 +158,7 @@ Project Identity + 현재 Snapshot + append-only History
 - 설명 가능한 Project Health 신호
 - 의미 단위 Timeline
 - 프로젝트 전용 SQLite
+- 프로젝트 Journey와 현재 Cycle 시작 기준선
 - 최대 5개의 기본 메뉴: 개요, 단계, 산출물, 히스토리, 설정
 - 프로젝트에 설치 가능한 단일 CLI tarball과 clean-room 인수 검증
 

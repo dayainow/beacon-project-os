@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `beacon cycle start`와 `beacon cycle status` Project Journey 명령
+- Cycle 시작 시 Snapshot, Git HEAD와 핵심 산출물을 묶는 기준선
+- Dashboard의 현재 Cycle, 목표와 시작 기준선 표시
+- 로컬 Runtime의 `GET /api/journey`
+
+### Changed
+
+- `.beacon/` 내부 사용자 의도와 파생 파일이 프로젝트 Git 관찰을 오염하지 않도록 제외
+
 ## 0.2.0 — 2026-07-15
 
 실제 외부 쇼핑몰 저장소 `saleor/storefront` 대조 평가를 바탕으로 관찰 정확도와 Dashboard 설명력을 높였습니다.

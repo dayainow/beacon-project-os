@@ -11,6 +11,9 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.doesNotThrow(() => new Script(script));
   assert.match(dashboard, /\/api\/snapshot/);
   assert.match(dashboard, /\/api\/history/);
+  assert.match(dashboard, /\/api\/journey/);
+  assert.match(dashboard, /Project Journey/);
+  assert.match(dashboard, /현재 Cycle/);
   assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /Append-only Activity/);
   assert.match(dashboard, /P0–P4 Process/);

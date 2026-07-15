@@ -1,4 +1,4 @@
-import { readProjectIdentity, scanProject } from "@beacon/core";
+import { readProjectIdentity, readProjectJourney, scanProject } from "@beacon/core";
 import { renderDashboard } from "@beacon/dashboard";
 import { createServer, type Server } from "node:http";
 import { ProjectHistoryStore } from "./historyStore.js";
@@ -68,6 +68,18 @@ export async function startBeaconRuntime({
       } catch (error) {
         sendJson(response, 500, {
           error: "snapshot_unavailable",
+          message: error instanceof Error ? error.message : "unknown error",
+        });
+      }
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/journey") {
+      try {
+        sendJson(response, 200, await readProjectJourney(root));
+      } catch (error) {
+        sendJson(response, 500, {
+          error: "journey_unavailable",
           message: error instanceof Error ? error.message : "unknown error",
         });
       }

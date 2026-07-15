@@ -70,6 +70,15 @@ function isGeneratedProjectBook(relativePath: string): boolean {
   return relativePath.replace(/\\/g, "/").split("/").pop()?.toLowerCase() === "project_book.md";
 }
 
+function isBeaconInternalPath(relativePath: string): boolean {
+  const normalized = relativePath.replace(/\\/g, "/");
+  return normalized === ".beacon" || normalized.startsWith(".beacon/");
+}
+
+function isObservedGitPath(relativePath: string): boolean {
+  return !isGeneratedProjectBook(relativePath) && !isBeaconInternalPath(relativePath);
+}
+
 export type ArtifactKind =
   | "overview"
   | "planning"
@@ -316,7 +325,7 @@ function parseGitChanges(value: string | null): GitChange[] {
     const record = records[index];
     const status = record.slice(0, 2).trim() || "?";
     const filePath = record.slice(3);
-    if (!isGeneratedProjectBook(filePath)) changes.push({ path: filePath, status });
+    if (isObservedGitPath(filePath)) changes.push({ path: filePath, status });
 
     if (/[RC]/.test(record.slice(0, 2)) && records[index + 1]) index += 1;
   }
@@ -341,7 +350,7 @@ function parseGitCommits(value: string | null): GitCommit[] {
         subject: subject.join("\u001f"),
         paths: pathLines
           .map((filePath) => filePath.trim())
-          .filter((filePath) => Boolean(filePath) && !isGeneratedProjectBook(filePath)),
+          .filter((filePath) => Boolean(filePath) && isObservedGitPath(filePath)),
       };
     })
     .filter((commit) => Boolean(commit.hash && commit.shortHash && commit.authoredAt));

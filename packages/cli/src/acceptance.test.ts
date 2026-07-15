@@ -49,6 +49,37 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.equal(firstCommit.status, 0, firstCommit.stderr);
   await writeFile(path.join(root, "README.md"), "# Observed Project\n\nWork in progress.\n", "utf8");
 
+  const cycleStarted = spawnSync(process.execPath, [
+    cliPath,
+    "cycle",
+    "start",
+    "1차 상품 목록 MVP",
+    "--goal",
+    "고객이 상품 목록을 탐색할 수 있게 한다.",
+    "--root",
+    root,
+  ], { encoding: "utf8" });
+  assert.equal(cycleStarted.status, 0, cycleStarted.stderr);
+  const startedCycle = JSON.parse(cycleStarted.stdout) as {
+    id: string;
+    name: string;
+    goal: string;
+    status: string;
+    baseline: { snapshotId: number; artifactPaths: string[] };
+  };
+  assert.equal(startedCycle.id, "cycle-001");
+  assert.equal(startedCycle.name, "1차 상품 목록 MVP");
+  assert.equal(startedCycle.goal, "고객이 상품 목록을 탐색할 수 있게 한다.");
+  assert.equal(startedCycle.status, "active");
+  assert.equal(startedCycle.baseline.snapshotId, 1);
+  assert.ok(startedCycle.baseline.artifactPaths.includes("README.md"));
+
+  const cycleStatus = spawnSync(process.execPath, [cliPath, "cycle", "status", "--root", root], {
+    encoding: "utf8",
+  });
+  assert.equal(cycleStatus.status, 0, cycleStatus.stderr);
+  assert.equal((JSON.parse(cycleStatus.stdout) as { cycles: unknown[] }).cycles.length, 1);
+
   const child = spawn(process.execPath, [
     cliPath,
     "open",
@@ -134,6 +165,7 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.ok(snapshot.observation.files.artifacts.some((artifact) => artifact.path === "docs/PRODUCT.md"));
   assert.equal(snapshot.observation.git.recentCommits[0].subject, "docs: establish project baseline");
   assert.ok(snapshot.observation.git.changedFiles.some((change) => change.path === "README.md"));
+  assert.ok(snapshot.observation.git.changedFiles.every((change) => !change.path.startsWith(".beacon/")));
   const architectureSignal = snapshot.health.signals.find((signal) => signal.id === "project-architecture");
   assert.equal(architectureSignal?.level, "warning");
   assert.ok(architectureSignal?.evidence.length);
@@ -151,8 +183,8 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.ok(snapshot.timeline.events.every((event, index, events) => (
     index === 0 || Date.parse(events[index - 1].occurredAt) >= Date.parse(event.occurredAt)
   )));
-  assert.equal(snapshot.persistence.recorded, true);
-  assert.equal(snapshot.persistence.baseline, true);
+  assert.equal(snapshot.persistence.recorded, false);
+  assert.equal(snapshot.persistence.baseline, false);
   assert.equal(snapshot.persistence.snapshotCount, 1);
   assert.equal(snapshot.process.currentStageId, "p1");
   assert.equal(snapshot.process.stages[0].gate.status, "ready");
@@ -167,6 +199,15 @@ test("beacon init → beacon open → project identity", async (context) => {
   const unchanged = await unchangedResponse.json() as { persistence: { recorded: boolean; snapshotCount: number } };
   assert.equal(unchanged.persistence.recorded, false);
   assert.equal(unchanged.persistence.snapshotCount, 1);
+
+  const journeyResponse = await fetch(`${url}/api/journey`);
+  assert.equal(journeyResponse.status, 200);
+  const journey = await journeyResponse.json() as {
+    cycles: Array<{ name: string; status: string; baseline: { snapshotId: number } }>;
+  };
+  assert.equal(journey.cycles[0].name, "1차 상품 목록 MVP");
+  assert.equal(journey.cycles[0].status, "active");
+  assert.equal(journey.cycles[0].baseline.snapshotId, 1);
 
   await writeFile(path.join(root, "README.md"), "# Observed Project\n\nReady for review.\n", "utf8");
   await utimes(path.join(root, "README.md"), new Date("2026-07-15T12:00:00.000Z"), new Date("2026-07-15T12:00:00.000Z"));
@@ -266,6 +307,8 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.match(dashboard, /Gate 준비도/);
   assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /Append-only Activity/);
+  assert.match(dashboard, /Project Journey/);
   assert.match(dashboard, /\/api\/snapshot/);
   assert.match(dashboard, /\/api\/history/);
+  assert.match(dashboard, /\/api\/journey/);
 });

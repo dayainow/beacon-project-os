@@ -30,6 +30,7 @@ pnpm exec beacon open
 ```text
 프로젝트 폴더
 → beacon init
+→ beacon cycle start "1차 MVP" --goal "이번 Cycle의 결과"
 → beacon open
 → 파일·Git 자동 관찰
 → 부족한 근거와 다음 행동 확인
@@ -42,6 +43,8 @@ pnpm exec beacon open
 | `beacon init` | 현재 프로젝트에 `.beacon/project.json`을 만들고 Beacon을 초기화합니다. |
 | `beacon open` | `127.0.0.1:4300`에서 로컬 Dashboard를 엽니다. |
 | `beacon identity` | 현재 프로젝트의 이름, 경로와 Git 기준점을 확인합니다. |
+| `beacon cycle start "이름" --goal "목표"` | 현재 상태를 기준선으로 저장하고 새 Project Cycle을 시작합니다. |
+| `beacon cycle status` | 현재 Cycle을 포함한 Project Journey를 확인합니다. |
 | `beacon export` | 현재 Snapshot과 누적 History로 `PROJECT_BOOK.md`를 만듭니다. |
 
 모든 명령은 현재 폴더를 기본 프로젝트로 사용하며 `--root PATH`로 다른 폴더를 지정할 수 있습니다. `open`은 `--port PORT`, `--no-browser`를 지원하고 `export`는 `--output PATH`로 출력 위치를 바꿀 수 있습니다.
@@ -53,6 +56,7 @@ pnpm exec beacon open
 - P0 기획, P1 디자인, P2 개발, P3 검증, P4 배포 Gate 준비도
 - commit과 작업 중 문서를 의미 단위로 묶은 Project Timeline
 - SQLite에 append-only로 쌓이는 Snapshot과 변경 이력
+- Cycle의 이름·목표와 시작 당시 Snapshot·Git·산출물 기준선
 - 정체성, Gate, 산출물, 변화와 Timeline을 합친 Project Book
 
 Beacon은 준비된 근거를 설명하지만 GO·HOLD·KILL 결정이나 사람의 승인을 대신하지 않습니다. 계정, Cloud 동기화, 여러 프로젝트 Portfolio도 `v0.2.0` 범위에 포함하지 않습니다.

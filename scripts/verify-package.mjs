@@ -81,12 +81,31 @@ try {
   const identity = JSON.parse(run(["exec", "beacon", "identity", "--root", projectRoot], consumerRoot));
   assert.equal(identity.name, "clean-beacon-project");
 
+  const cycle = JSON.parse(run([
+    "exec",
+    "beacon",
+    "cycle",
+    "start",
+    "1차 검증 Cycle",
+    "--goal",
+    "배포 패키지에서 Journey 시작을 검증한다.",
+    "--root",
+    projectRoot,
+  ], consumerRoot));
+  assert.equal(cycle.id, "cycle-001");
+  assert.equal(cycle.baseline.snapshotId, 1);
+
   const runtime = await openRuntime(projectRoot, consumerRoot);
   try {
     const snapshotResponse = await fetch(`${runtime.url}/api/snapshot`);
     assert.equal(snapshotResponse.status, 200);
     const snapshot = await snapshotResponse.json();
     assert.ok(snapshot.observation.files.artifacts.some((artifact) => artifact.path === "README.md"));
+
+    const journeyResponse = await fetch(`${runtime.url}/api/journey`);
+    assert.equal(journeyResponse.status, 200);
+    const journey = await journeyResponse.json();
+    assert.equal(journey.cycles[0].name, "1차 검증 Cycle");
 
     const dashboardResponse = await fetch(runtime.url);
     assert.equal(dashboardResponse.status, 200);

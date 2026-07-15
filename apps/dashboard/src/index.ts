@@ -26,6 +26,12 @@ export function renderDashboard(): string {
       .root { margin: 0; color: #6c707a; font-size: 13px; overflow-wrap: anywhere; }
       .identity-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
       .chip { border: 1px solid #e1e2e5; background: #fafafa; border-radius: 999px; padding: 7px 10px; font-size: 12px; color: #555962; }
+      .journey { margin-top: 12px; padding: 26px; border-left: 4px solid #5b43ff; }
+      .journey-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+      .journey h2 { margin-top: 8px; }
+      .journey-goal { margin: 10px 0 0; max-width: 760px; color: #555962; font-size: 14px; line-height: 1.6; }
+      .journey-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+      .cycle-number { color: #5b43ff; font: 800 12px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
       .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
       .metric { padding: 20px; min-height: 118px; }
       .metric-value { display: block; margin-top: 12px; font-size: 28px; font-weight: 850; letter-spacing: -.04em; }
@@ -106,6 +112,22 @@ export function renderDashboard(): string {
           <span class="chip" id="head">HEAD —</span>
           <span class="chip" id="scanned">스캔 대기</span>
           <span class="chip" id="history-count">기록 확인 중</span>
+        </div>
+      </section>
+
+      <section class="card journey" aria-live="polite">
+        <div class="journey-top">
+          <div>
+            <div class="eyebrow">Project Journey · 현재 Cycle</div>
+            <h2 id="cycle-name">Cycle을 확인하고 있습니다.</h2>
+            <p class="journey-goal" id="cycle-goal">프로젝트 목표와 시작 기준선을 불러오는 중입니다.</p>
+          </div>
+          <span class="cycle-number" id="cycle-number">—</span>
+        </div>
+        <div class="journey-meta">
+          <span class="chip" id="cycle-started">시작 시점 · —</span>
+          <span class="chip" id="cycle-baseline">기준선 · —</span>
+          <span class="chip" id="cycle-artifacts">시작 산출물 · —</span>
         </div>
       </section>
 
@@ -263,17 +285,20 @@ export function renderDashboard(): string {
           const responses = await Promise.all([
             fetch('/api/identity', { cache: 'no-store' }),
             fetch('/api/snapshot', { cache: 'no-store' }),
+            fetch('/api/journey', { cache: 'no-store' }),
           ]);
           if (responses.some((response) => !response.ok)) throw new Error('project request failed');
 
           const identity = await responses[0].json();
           const snapshot = await responses[1].json();
+          const journey = await responses[2].json();
           const historyResponse = await fetch('/api/history?limit=100', { cache: 'no-store' });
           if (!historyResponse.ok) throw new Error('history request failed');
           const history = await historyResponse.json();
           const observation = snapshot.observation;
           const projectArtifacts = observation.files.artifacts.filter((artifact) => artifact.scope !== 'support');
           const supportArtifacts = observation.files.artifacts.filter((artifact) => artifact.scope === 'support');
+          const activeCycle = journey.cycles.find((cycle) => cycle.status === 'active');
 
           element('name').textContent = identity.name;
           element('root').textContent = identity.root;
@@ -281,6 +306,22 @@ export function renderDashboard(): string {
           element('head').textContent = identity.gitHead ? 'HEAD · ' + identity.gitHead : 'HEAD · —';
           element('scanned').textContent = '스캔 · ' + new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date(snapshot.scannedAt));
           element('history-count').textContent = '기준선 · ' + history.snapshotCount + '회';
+
+          if (activeCycle) {
+            element('cycle-name').textContent = activeCycle.name;
+            element('cycle-goal').textContent = activeCycle.goal;
+            element('cycle-number').textContent = 'CYCLE ' + String(activeCycle.sequence).padStart(2, '0') + ' · 진행 중';
+            element('cycle-started').textContent = '시작 · ' + new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(activeCycle.startedAt));
+            element('cycle-baseline').textContent = '시작 기준선 · Snapshot #' + activeCycle.baseline.snapshotId;
+            element('cycle-artifacts').textContent = '시작 산출물 · ' + activeCycle.baseline.artifactPaths.length + '개';
+          } else {
+            element('cycle-name').textContent = '아직 시작한 Cycle이 없습니다.';
+            element('cycle-goal').textContent = 'beacon cycle start로 이번 여정의 이름과 목표를 기록하세요.';
+            element('cycle-number').textContent = journey.cycles.length + ' cycles';
+            element('cycle-started').textContent = '시작 시점 · —';
+            element('cycle-baseline').textContent = '기준선 · —';
+            element('cycle-artifacts').textContent = '시작 산출물 · —';
+          }
 
           element('score').textContent = snapshot.health.score + '%';
           element('headline').textContent = snapshot.health.headline;
