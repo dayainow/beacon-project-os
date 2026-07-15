@@ -14,7 +14,7 @@
        @beacon/dashboard
 ```
 
-- `@beacon/core`: Project Identity와 설정 계약. UI와 HTTP를 모른다.
+- `@beacon/core`: Project Identity, 파일·Git 관찰과 Project Health 계약. UI와 HTTP를 모른다.
 - `@beacon/runtime`: 현재 프로젝트 하나를 읽어 localhost API로 제공한다.
 - `@beacon/cli`: `init`, `open`, `identity`의 사용자 진입점이다.
 - `@beacon/dashboard`: runtime이 제공한 관찰 결과만 표시한다.
@@ -30,7 +30,19 @@
 
 Dashboard는 별도 Operations DB나 Project ID 입력을 요구하지 않는다. CLI가 실행된 폴더가 유일한 프로젝트 경계다.
 
-## 첫 기준선
+## 관찰 흐름
 
-현재 구현은 의도적으로 작다. `init`이 버전 있는 설정을 만들고, `open`이 loopback runtime을 시작하며, Dashboard가 `GET /api/identity`를 통해 현재 폴더 이름과 Git 상태를 보여준다. 파일 스캐너, Health, Timeline과 SQLite는 이 경계를 유지한 채 세로 흐름으로 추가한다.
+```text
+filesystem + git
+  → scanProject(root)
+  → ProjectObservation
+  → evaluateProjectHealth(observation)
+  → GET /api/snapshot
+  → Dashboard
+```
 
+파일 스캐너는 심볼릭 링크를 따라가지 않고 `.git`, `.beacon`, 의존성, cache와 build 결과를 제외한다. 한 번에 최대 10,000개 파일을 관찰하며 제한을 넘으면 `truncated`로 설명한다. Git 명령은 shell 없이 현재 프로젝트 경로에만 실행하고 3초 제한을 둔다.
+
+Project Health는 소개, 기획, 설계, Git 저장소와 commit 이력의 다섯 기준을 점검한다. 점수만 표시하지 않고 각 신호에 근거, 출처와 다음 행동을 포함한다. 미커밋 변경은 실패가 아니라 검토가 필요한 진행 상태로 취급한다.
+
+`init`은 버전 있는 설정을 만들고, `open`은 loopback runtime을 시작한다. Dashboard는 `GET /api/identity`와 `GET /api/snapshot`만 사용하므로 Operations DB나 별도 Project ID가 필요 없다. Timeline과 SQLite는 이 경계를 유지한 채 이후 세로 흐름으로 추가한다.

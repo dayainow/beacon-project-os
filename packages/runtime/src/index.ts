@@ -1,4 +1,4 @@
-import { readProjectIdentity } from "@beacon/core";
+import { readProjectIdentity, scanProject } from "@beacon/core";
 import { renderDashboard } from "@beacon/dashboard";
 import { createServer, type Server } from "node:http";
 
@@ -14,7 +14,10 @@ export interface BeaconRuntime {
 }
 
 function sendJson(response: import("node:http").ServerResponse, status: number, value: unknown): void {
-  response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
+  response.writeHead(status, {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+  });
   response.end(`${JSON.stringify(value)}\n`);
 }
 
@@ -50,6 +53,18 @@ export async function startBeaconRuntime({
       return;
     }
 
+    if (requestUrl.pathname === "/api/snapshot") {
+      try {
+        sendJson(response, 200, await scanProject(root));
+      } catch (error) {
+        sendJson(response, 500, {
+          error: "snapshot_unavailable",
+          message: error instanceof Error ? error.message : "unknown error",
+        });
+      }
+      return;
+    }
+
     if (requestUrl.pathname === "/") {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       response.end(renderDashboard());
@@ -75,4 +90,3 @@ export async function startBeaconRuntime({
 
   return { server, url: `http://${host}:${address.port}` };
 }
-

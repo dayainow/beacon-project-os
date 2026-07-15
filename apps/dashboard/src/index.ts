@@ -9,62 +9,205 @@ export function renderDashboard(): string {
       :root { color-scheme: light; font-family: Inter, Pretendard, system-ui, sans-serif; background: #f5f6f8; color: #17191d; }
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100vh; }
-      main { width: min(960px, calc(100% - 40px)); margin: 0 auto; padding: 64px 0; }
-      header { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
-      .brand { color: #5b43ff; font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-      h1 { margin: 8px 0 0; font-size: clamp(32px, 5vw, 52px); letter-spacing: -.04em; }
-      .status { border: 1px solid #c9f1df; background: #edfbf5; color: #08764d; border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 700; }
-      .card { background: #fff; border: 1px solid #dedfe3; border-radius: 20px; padding: 28px; box-shadow: 0 12px 36px rgb(23 25 29 / 6%); }
-      .eyebrow { color: #777b85; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-      h2 { margin: 10px 0 8px; font-size: 26px; }
-      .root { margin: 0; color: #6c707a; overflow-wrap: anywhere; }
-      dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 28px 0 0; background: #e5e6e9; border: 1px solid #e5e6e9; border-radius: 14px; overflow: hidden; }
-      dl div { background: #fafafa; padding: 18px; }
-      dt { color: #777b85; font-size: 12px; margin-bottom: 7px; }
-      dd { margin: 0; font-weight: 700; }
-      .next { margin-top: 24px; padding: 18px; border-left: 3px solid #5b43ff; background: #f6f3ff; border-radius: 0 12px 12px 0; }
-      .next strong { display: block; margin-bottom: 5px; }
-      .next p { margin: 0; color: #5f5875; }
-      @media (max-width: 640px) { main { padding-top: 36px; } header { align-items: flex-start; } dl { grid-template-columns: 1fr; } }
+      button { font: inherit; }
+      main { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 52px 0 72px; }
+      header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+      .brand { color: #5b43ff; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+      h1 { margin: 8px 0 0; font-size: clamp(34px, 5vw, 52px); letter-spacing: -.045em; }
+      .header-actions { display: flex; align-items: center; gap: 10px; }
+      .status { border: 1px solid #ddd8ff; background: #f5f2ff; color: #5b43ff; border-radius: 999px; padding: 9px 12px; font-size: 12px; font-weight: 800; }
+      .refresh { border: 1px solid #d8d9dd; background: #fff; border-radius: 10px; padding: 9px 13px; color: #34373d; cursor: pointer; font-weight: 700; }
+      .refresh:hover { border-color: #9d91ff; }
+      .refresh:disabled { cursor: wait; opacity: .55; }
+      .card { background: #fff; border: 1px solid #dedfe3; border-radius: 18px; box-shadow: 0 10px 30px rgb(23 25 29 / 5%); }
+      .identity { padding: 26px; }
+      .eyebrow { color: #777b85; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+      h2 { margin: 8px 0 6px; font-size: 25px; letter-spacing: -.025em; }
+      .root { margin: 0; color: #6c707a; font-size: 13px; overflow-wrap: anywhere; }
+      .identity-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+      .chip { border: 1px solid #e1e2e5; background: #fafafa; border-radius: 999px; padding: 7px 10px; font-size: 12px; color: #555962; }
+      .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+      .metric { padding: 20px; min-height: 118px; }
+      .metric-value { display: block; margin-top: 12px; font-size: 28px; font-weight: 850; letter-spacing: -.04em; }
+      .metric-note { display: block; margin-top: 4px; color: #777b85; font-size: 12px; }
+      .health-card { border-left: 4px solid #5b43ff; }
+      .health-card.attention { border-left-color: #f0a100; }
+      .health-card.at_risk { border-left-color: #df4b57; }
+      .layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 12px; }
+      .panel { overflow: hidden; }
+      .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 24px 18px; border-bottom: 1px solid #ececef; }
+      .panel-head h2 { margin: 6px 0 0; font-size: 20px; }
+      .count { color: #5b43ff; font-size: 12px; font-weight: 800; white-space: nowrap; }
+      .list { list-style: none; margin: 0; padding: 0; }
+      .list-item { padding: 18px 24px; border-bottom: 1px solid #eeeef1; }
+      .list-item:last-child { border-bottom: 0; }
+      .signal-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+      .signal-title, .artifact-name, .commit-subject { margin: 0; font-weight: 800; line-height: 1.4; }
+      .badge { border-radius: 999px; padding: 5px 8px; font-size: 10px; font-weight: 850; white-space: nowrap; }
+      .badge.warning { background: #fff0f1; color: #bd2736; }
+      .badge.attention { background: #fff7df; color: #9a6200; }
+      .badge.ready { background: #eaf9f2; color: #08764d; }
+      .signal-detail { margin: 7px 0 0; color: #666a73; font-size: 13px; line-height: 1.55; }
+      .next-action { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
+      .source { margin-top: 9px; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+      .artifact-row, .commit-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+      .artifact-kind { color: #5b43ff; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+      .artifact-path { margin-top: 5px; color: #858892; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+      .commit-meta { color: #8a8d95; font-size: 11px; white-space: nowrap; }
+      .history { margin-top: 12px; }
+      .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
+      .error { padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
+      @media (max-width: 860px) { .metrics { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
+      @media (max-width: 560px) { main { width: min(100% - 24px, 1120px); padding-top: 28px; } header { align-items: flex-start; flex-direction: column; } .metrics { grid-template-columns: 1fr; } .metric { min-height: auto; } }
     </style>
   </head>
   <body>
     <main>
       <header>
         <div><div class="brand">Beacon</div><h1>프로젝트 개요</h1></div>
-        <div class="status" id="status">프로젝트 확인 중</div>
+        <div class="header-actions">
+          <div class="status" id="status">프로젝트 확인 중</div>
+          <button class="refresh" id="refresh" type="button">다시 스캔</button>
+        </div>
       </header>
-      <section class="card" aria-live="polite">
+
+      <section class="card identity" aria-live="polite">
         <div class="eyebrow">Project Identity</div>
         <h2 id="name">불러오는 중…</h2>
         <p class="root" id="root"></p>
-        <dl>
-          <div><dt>Git branch</dt><dd id="branch">—</dd></div>
-          <div><dt>Git commit</dt><dd id="head">—</dd></div>
-        </dl>
-        <div class="next">
-          <strong>첫 번째 Beacon 신호</strong>
-          <p>현재는 프로젝트 정체성을 자동으로 읽습니다. 다음 세로 흐름에서 파일과 Git 탐색 결과를 연결합니다.</p>
+        <div class="identity-meta">
+          <span class="chip" id="branch">Git 확인 중</span>
+          <span class="chip" id="head">HEAD —</span>
+          <span class="chip" id="scanned">스캔 대기</span>
         </div>
+      </section>
+
+      <section class="metrics" aria-label="프로젝트 관찰 요약">
+        <article class="card metric health-card" id="health-card"><div class="eyebrow">Project Health</div><strong class="metric-value" id="score">—</strong><span class="metric-note" id="headline">기준 확인 중</span></article>
+        <article class="card metric"><div class="eyebrow">발견한 산출물</div><strong class="metric-value" id="artifact-count">—</strong><span class="metric-note">파일 경로에서 자동 발견</span></article>
+        <article class="card metric"><div class="eyebrow">최근 변경</div><strong class="metric-value" id="commit-count">—</strong><span class="metric-note">최근 Git commit</span></article>
+        <article class="card metric"><div class="eyebrow">작업 중 변경</div><strong class="metric-value" id="change-count">—</strong><span class="metric-note">아직 commit되지 않은 경로</span></article>
+      </section>
+
+      <div id="error" class="error" hidden></div>
+
+      <section class="layout">
+        <article class="card panel">
+          <div class="panel-head"><div><div class="eyebrow">Beacon Signals</div><h2>부족한 부분과 다음 행동</h2></div><span class="count" id="signal-count">0 signals</span></div>
+          <ul class="list" id="signals"><li class="empty">프로젝트 신호를 계산하고 있습니다.</li></ul>
+        </article>
+
+        <article class="card panel">
+          <div class="panel-head"><div><div class="eyebrow">Deliverables</div><h2>발견한 산출물</h2></div><span class="count" id="artifact-label">0 files</span></div>
+          <ul class="list" id="artifacts"><li class="empty">산출물을 찾고 있습니다.</li></ul>
+        </article>
+      </section>
+
+      <section class="card panel history">
+        <div class="panel-head"><div><div class="eyebrow">Recent History</div><h2>최근 변경</h2></div><span class="count" id="history-label">0 commits</span></div>
+        <ul class="list" id="history"><li class="empty">Git 이력을 확인하고 있습니다.</li></ul>
       </section>
     </main>
     <script>
-      fetch('/api/identity')
-        .then((response) => {
-          if (!response.ok) throw new Error('identity request failed');
-          return response.json();
-        })
-        .then((identity) => {
-          document.querySelector('#name').textContent = identity.name;
-          document.querySelector('#root').textContent = identity.root;
-          document.querySelector('#branch').textContent = identity.gitBranch ?? 'Git 저장소 아님';
-          document.querySelector('#head').textContent = identity.gitHead ?? '—';
-          document.querySelector('#status').textContent = '연결됨';
-        })
-        .catch(() => {
-          document.querySelector('#name').textContent = '프로젝트를 읽지 못했습니다';
-          document.querySelector('#status').textContent = '확인 필요';
-        });
+      const element = (id) => document.getElementById(id);
+      const kindLabels = { overview: '개요', planning: '기획', architecture: '설계', quality: '검증', release: '릴리스', document: '문서' };
+      const levelLabels = { warning: '보완 필요', attention: '확인 필요', ready: '준비됨' };
+
+      function text(tag, className, value) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        node.textContent = value;
+        return node;
+      }
+
+      function replaceList(id, items, render, emptyMessage) {
+        const list = element(id);
+        list.replaceChildren();
+        if (!items.length) {
+          list.append(text('li', 'empty', emptyMessage));
+          return;
+        }
+        items.forEach((item) => list.append(render(item)));
+      }
+
+      function renderSignal(signal) {
+        const item = text('li', 'list-item', '');
+        const top = text('div', 'signal-top', '');
+        top.append(text('p', 'signal-title', signal.title), text('span', 'badge ' + signal.level, levelLabels[signal.level]));
+        item.append(top, text('p', 'signal-detail', signal.detail));
+        item.append(text('p', 'next-action', '다음 행동 · ' + signal.nextAction));
+        item.append(text('div', 'source', '출처 · ' + signal.sources.join(', ')));
+        return item;
+      }
+
+      function renderArtifact(artifact) {
+        const item = text('li', 'list-item', '');
+        const row = text('div', 'artifact-row', '');
+        const content = text('div', '', '');
+        content.append(text('p', 'artifact-name', artifact.name), text('div', 'artifact-path', artifact.path));
+        row.append(content, text('span', 'artifact-kind', kindLabels[artifact.kind] || '문서'));
+        item.append(row);
+        return item;
+      }
+
+      function renderCommit(commit) {
+        const item = text('li', 'list-item', '');
+        const row = text('div', 'commit-row', '');
+        const content = text('div', '', '');
+        content.append(text('p', 'commit-subject', commit.subject), text('div', 'source', 'git:' + commit.shortHash));
+        const date = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric' }).format(new Date(commit.authoredAt));
+        row.append(content, text('span', 'commit-meta', date));
+        item.append(row);
+        return item;
+      }
+
+      async function loadProject() {
+        element('refresh').disabled = true;
+        element('status').textContent = '스캔 중';
+        element('error').hidden = true;
+
+        try {
+          const responses = await Promise.all([
+            fetch('/api/identity', { cache: 'no-store' }),
+            fetch('/api/snapshot', { cache: 'no-store' }),
+          ]);
+          if (responses.some((response) => !response.ok)) throw new Error('project request failed');
+
+          const identity = await responses[0].json();
+          const snapshot = await responses[1].json();
+          const observation = snapshot.observation;
+
+          element('name').textContent = identity.name;
+          element('root').textContent = identity.root;
+          element('branch').textContent = identity.gitBranch ? 'Branch · ' + identity.gitBranch : 'Git 저장소 아님';
+          element('head').textContent = identity.gitHead ? 'HEAD · ' + identity.gitHead : 'HEAD · —';
+          element('scanned').textContent = '스캔 · ' + new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date(snapshot.scannedAt));
+
+          element('score').textContent = snapshot.health.score + '%';
+          element('headline').textContent = snapshot.health.headline;
+          element('artifact-count').textContent = String(observation.files.artifacts.length);
+          element('commit-count').textContent = String(observation.git.recentCommits.length);
+          element('change-count').textContent = String(observation.git.changedFiles.length);
+          element('health-card').className = 'card metric health-card ' + snapshot.health.status;
+
+          element('signal-count').textContent = snapshot.health.signals.length + ' signals';
+          element('artifact-label').textContent = observation.files.artifacts.length + ' files';
+          element('history-label').textContent = observation.git.recentCommits.length + ' commits';
+          replaceList('signals', snapshot.health.signals, renderSignal, '현재 표시할 신호가 없습니다.');
+          replaceList('artifacts', observation.files.artifacts.slice(0, 8), renderArtifact, '발견한 문서 산출물이 없습니다.');
+          replaceList('history', observation.git.recentCommits, renderCommit, '아직 표시할 Git commit이 없습니다.');
+          element('status').textContent = '연결됨';
+        } catch {
+          element('status').textContent = '확인 필요';
+          element('error').hidden = false;
+          element('error').textContent = '프로젝트를 스캔하지 못했습니다. Beacon을 실행한 터미널에서 경로와 권한을 확인하세요.';
+        } finally {
+          element('refresh').disabled = false;
+        }
+      }
+
+      element('refresh').addEventListener('click', loadProject);
+      loadProject();
     </script>
   </body>
 </html>`;
