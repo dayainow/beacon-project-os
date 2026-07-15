@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0 — 2026-07-15
+
+실제 외부 쇼핑몰 저장소 `saleor/storefront` 대조 평가를 바탕으로 관찰 정확도와 Dashboard 설명력을 높였습니다.
+
+### Added
+
+- 핵심 프로젝트 산출물과 AI skill·저장소 지원 문서 범위 구분
+- Dashboard의 핵심 산출물·지원 문서 분리 표시
+- 일반적인 Fix·Document·Migrate commit 제목의 Timeline 의미 분류
+- Saleor Storefront 외부 평가 기록과 회귀 테스트
+
+### Changed
+
+- 지원 문서는 Health와 P0–P4 Gate 근거에서 제외
+- `product-pdp.md` 같은 도메인 기능 문서를 PRD로 오인하지 않도록 파일명 토큰 분류 개선
+- Health 기준이 하나라도 부족하면 `on_track` 대신 `attention`으로 표시
+- Project Book에 핵심·지원 범위를 함께 기록
+
 ## 0.1.0 — 2026-07-15
 
 Beacon의 첫 설치 가능한 로컬 MVP입니다.

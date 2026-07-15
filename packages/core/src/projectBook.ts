@@ -88,6 +88,7 @@ export function generateProjectBook({ identity, snapshot, history }: ProjectBook
     : [["모든 자동 근거 준비", "자동 관찰 기준 충족", "Beacon scan", "사람이 Gate 결정을 검토하세요."]];
 
   const artifactRows = snapshot.observation.files.artifacts.map((artifact) => [
+    artifact.scope === "project" ? "핵심" : "지원",
     artifactLabels[artifact.kind],
     inlineCode(artifact.path),
     artifact.modifiedAt,
@@ -111,6 +112,8 @@ export function generateProjectBook({ identity, snapshot, history }: ProjectBook
   const currentStage = focusStage
     ? `${focusStage.id.toUpperCase()} ${focusStage.name}`
     : "P0–P4 자동 근거 준비";
+  const projectArtifactCount = snapshot.observation.files.artifacts.filter((artifact) => artifact.scope === "project").length;
+  const supportArtifactCount = snapshot.observation.files.artifacts.length - projectArtifactCount;
 
   return `# ${cell(identity.name)} Project Book
 
@@ -131,7 +134,8 @@ export function generateProjectBook({ identity, snapshot, history }: ProjectBook
 - Project Health: **${snapshot.health.score}%** — ${cell(snapshot.health.headline)}
 - 현재 Process: **${currentStage}**
 - 준비된 단계: **${snapshot.process.readyStages}/${snapshot.process.totalStages}**
-- 발견한 산출물: **${snapshot.observation.files.artifacts.length}개**
+- 핵심 산출물: **${projectArtifactCount}개**
+- 지원 문서: **${supportArtifactCount}개**
 - 저장된 기준선: **${history.snapshotCount}개**
 - 누적 변화: **${history.changeCount}개**
 - 누적 Timeline: **${history.timelineCount}개**
@@ -146,7 +150,7 @@ ${table(["요구조건", "근거", "출처", "다음 행동"], gateDetails)}
 
 ## 발견한 산출물
 
-${table(["종류", "경로", "수정 시각", "출처"], artifactRows)}
+${table(["범위", "종류", "경로", "수정 시각", "출처"], artifactRows)}
 
 ## 스캔 사이의 변화
 
@@ -164,4 +168,3 @@ ${table(["발생 시각", "범주", "출처", "참조", "내용"], timelineRows)
 - 생성 도구: Beacon Project OS
 `;
 }
-

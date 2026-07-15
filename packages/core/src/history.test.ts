@@ -12,6 +12,7 @@ function artifact(path: string, modifiedAt: string): DiscoveredArtifact {
     path,
     name: path.split("/").at(-1) ?? path,
     kind: path.includes("PRODUCT") ? "planning" : path.includes("ARCHITECTURE") ? "architecture" : "overview",
+    scope: "project",
     modifiedAt,
     source: "filesystem",
   };

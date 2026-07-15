@@ -15,6 +15,7 @@ function observation(kinds: ArtifactKind[], options: { source?: number; tests?: 
         path: kind === "overview" ? "README.md" : `docs/${kind.toUpperCase()}-${index}.md`,
         name: `${kind}.md`,
         kind,
+        scope: "project",
         modifiedAt: "2026-07-15T10:00:00.000Z",
         source: "filesystem",
       })),
@@ -66,4 +67,3 @@ test("keeps later stages upcoming when P0 evidence is missing", () => {
   assert.equal(process.stages[1].state, "upcoming");
   assert.equal(process.stages[0].gate.satisfiedRequirements, 0);
 });
-

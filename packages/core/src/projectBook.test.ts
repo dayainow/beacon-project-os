@@ -45,9 +45,11 @@ test("exports identity, gates, artifacts, changes and timeline as Markdown", asy
   assert.match(book, /^# example-project Project Book/m);
   assert.match(book, /## P0–P4 Gate 준비도/);
   assert.match(book, /## 발견한 산출물/);
+  assert.match(book, /핵심 산출물: \*\*2개\*\*/);
+  assert.match(book, /지원 문서: \*\*0개\*\*/);
+  assert.match(book, /\| 핵심 \| 기획 \| `docs\/PRODUCT\.md`/);
   assert.match(book, /`docs\/PRODUCT\.md`/);
   assert.match(book, /PRODUCT\.md 산출물 추가/);
   assert.match(book, /## Project Timeline/);
   assert.doesNotMatch(book, new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 });
-

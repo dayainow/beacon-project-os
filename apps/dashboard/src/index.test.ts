@@ -15,5 +15,7 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(dashboard, /Append-only Activity/);
   assert.match(dashboard, /P0–P4 Process/);
   assert.match(dashboard, /Gate 준비도/);
+  assert.match(dashboard, /핵심 산출물/);
+  assert.match(dashboard, /지원 문서/);
   assert.doesNotMatch(script, /innerHTML|insertAdjacentHTML|document\.write/);
 });

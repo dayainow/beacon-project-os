@@ -1,6 +1,6 @@
 {
   "name": "@dayainow/beacon",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Local-first Project Navigation OS CLI",
   "type": "module",
   "bin": {

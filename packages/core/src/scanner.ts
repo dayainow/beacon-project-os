@@ -78,10 +78,13 @@ export type ArtifactKind =
   | "release"
   | "document";
 
+export type ArtifactScope = "project" | "support";
+
 export interface DiscoveredArtifact {
   path: string;
   name: string;
   kind: ArtifactKind;
+  scope: ArtifactScope;
   modifiedAt: string;
   source: "filesystem";
 }
@@ -186,15 +189,27 @@ function toProjectPath(value: string): string {
   return value.split(path.sep).join("/");
 }
 
+function artifactScope(relativePath: string): ArtifactScope {
+  const firstSegment = relativePath.replace(/\\/g, "/").split("/")[0]?.toLowerCase();
+  return new Set([".agents", ".claude", ".cursor", ".github", "skills"]).has(firstSegment)
+    ? "support"
+    : "project";
+}
+
 function artifactKind(relativePath: string): ArtifactKind {
-  const lower = relativePath.toLowerCase();
+  const lower = relativePath.toLowerCase().replace(/\\/g, "/");
   const name = path.basename(lower);
+  const stem = name.replace(/\.[^.]+$/, "");
+  const tokens = lower.split(/[\/\-_.\s]+/).filter(Boolean);
 
   if (/^readme(?:\.|$)/.test(name)) return "overview";
-  if (/(^|\/)(prd|product|requirements?|brief|기획|요구사항)([-_.\/]|$)/.test(lower)) return "planning";
-  if (/(^|\/)(adr|architecture|design|system|설계)([-_.\/]|$)/.test(lower)) return "architecture";
-  if (/(^|\/)(test|tests|qa|quality|validation|검증)([-_.\/]|$)/.test(lower)) return "quality";
-  if (/(^|\/)(changelog|release|releases|릴리스)([-_.\/]|$)/.test(lower)) return "release";
+  if (
+    ["prd", "product", "requirement", "requirements", "brief", "plan", "planning", "기획", "요구사항"].includes(stem)
+    || tokens.some((token) => ["prd", "requirement", "requirements", "brief", "planning", "기획", "요구사항"].includes(token))
+  ) return "planning";
+  if (tokens.some((token) => ["adr", "architecture", "design", "system", "설계"].includes(token))) return "architecture";
+  if (tokens.some((token) => ["test", "tests", "qa", "quality", "validation", "검증"].includes(token))) return "quality";
+  if (tokens.some((token) => ["changelog", "release", "releases", "릴리스"].includes(token))) return "release";
   return "document";
 }
 
@@ -259,6 +274,7 @@ async function scanFiles(root: string): Promise<FileObservation> {
           path: relativePath,
           name: entry.name,
           kind: artifactKind(relativePath),
+          scope: artifactScope(relativePath),
           modifiedAt: fileStat.mtime.toISOString(),
           source: "filesystem",
         });
@@ -269,7 +285,11 @@ async function scanFiles(root: string): Promise<FileObservation> {
   }
 
   await visit(root);
-  artifacts.sort((left, right) => right.modifiedAt.localeCompare(left.modifiedAt) || left.path.localeCompare(right.path));
+  artifacts.sort((left, right) => (
+    left.scope.localeCompare(right.scope)
+    || right.modifiedAt.localeCompare(left.modifiedAt)
+    || left.path.localeCompare(right.path)
+  ));
   return { total, source, tests, config, truncated, artifacts };
 }
 
@@ -372,7 +392,7 @@ function documentSignal(
     nextAction: string;
   },
 ): { passed: boolean; signal: ProjectSignal } {
-  const matches = artifacts.filter((artifact) => artifact.kind === kind);
+  const matches = artifacts.filter((artifact) => artifact.scope === "project" && artifact.kind === kind);
   const passed = matches.length > 0;
 
   return {
@@ -490,7 +510,7 @@ export function evaluateProjectHealth(observation: ProjectObservation): ProjectH
   const scoredChecks = checks.slice(0, 5);
   const passedChecks = scoredChecks.filter((check) => check.passed).length;
   const score = Math.round((passedChecks / scoredChecks.length) * 100);
-  const status = score >= 80 ? "on_track" : score >= 50 ? "attention" : "at_risk";
+  const status = score === 100 ? "on_track" : score >= 60 ? "attention" : "at_risk";
   const headline = status === "on_track"
     ? "프로젝트의 기본 방향과 기록이 연결되어 있습니다."
     : status === "attention"
@@ -534,14 +554,22 @@ function commitTimelineCategory(subject: string): TimelineCategory {
   if (type === "build" || type === "ci" || type === "chore") return "operations";
   if (type === "plan" || type === "product") return "planning";
   if (type === "design" || type === "adr") return "design";
+  if (/^(fix|fixed|resolve|resolved|hotfix)\b/i.test(subject)) return "issue";
+  if (/^(test|verify|validate)\b/i.test(subject)) return "quality";
+  if (/^(docs?|document|readme)\b|^(update|refresh)\b.*\b(docs?|readme)\b/i.test(subject)) return "documentation";
+  if (/^(release|publish|deploy)\b/i.test(subject)) return "delivery";
+  if (/^(build|ci|chore)\b|\b(codeowners?|dockerfile|workflow)\b/i.test(subject)) return "operations";
+  if (/\b(design|architecture|adr)\b/i.test(subject)) return "design";
+  if (/^(add|implement|introduce|migrate|extract|improve|restore|support|enable)\b/i.test(subject)) return "implementation";
   return "change";
 }
 
 export function buildProjectTimeline(observation: ProjectObservation): ProjectTimeline {
   const changedPaths = new Set(observation.git.changedFiles.map((change) => change.path));
+  const projectArtifacts = observation.files.artifacts.filter((artifact) => artifact.scope === "project");
   const workingArtifacts = observation.git.isRepository
-    ? observation.files.artifacts.filter((artifact) => changedPaths.has(artifact.path))
-    : observation.files.artifacts;
+    ? projectArtifacts.filter((artifact) => changedPaths.has(artifact.path))
+    : projectArtifacts;
 
   const artifactEvents: TimelineEvent[] = workingArtifacts.map((artifact) => ({
     id: `artifact:${artifact.path}`,
@@ -557,7 +585,7 @@ export function buildProjectTimeline(observation: ProjectObservation): ProjectTi
     relatedArtifacts: [artifact.path],
   }));
 
-  const artifactPaths = new Set(observation.files.artifacts.map((artifact) => artifact.path));
+  const artifactPaths = new Set(projectArtifacts.map((artifact) => artifact.path));
   const commitEvents: TimelineEvent[] = observation.git.recentCommits.map((commit) => {
     const relatedArtifacts = commit.paths.filter((filePath) => artifactPaths.has(filePath));
     return {

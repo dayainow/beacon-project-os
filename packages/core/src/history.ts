@@ -32,6 +32,7 @@ function changeId(
 function artifactChanged(before: DiscoveredArtifact, after: DiscoveredArtifact): boolean {
   return before.name !== after.name
     || before.kind !== after.kind
+    || (before.scope !== undefined && before.scope !== after.scope)
     || before.modifiedAt !== after.modifiedAt;
 }
 
@@ -121,4 +122,3 @@ export function diffProjectSnapshots(
       || left.kind.localeCompare(right.kind)
   ));
 }
-

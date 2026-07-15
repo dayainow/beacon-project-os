@@ -9,6 +9,8 @@ import { fileURLToPath } from "node:url";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliRoot = path.join(repositoryRoot, "packages", "cli");
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const cliPackage = JSON.parse(await readFile(path.join(cliRoot, "package.json"), "utf8"));
+const archiveName = `${cliPackage.name.replace(/^@/, "").replace("/", "-")}-${cliPackage.version}.tgz`;
 
 function run(args, cwd) {
   const result = spawnSync(pnpm, args, { cwd, encoding: "utf8" });
@@ -68,7 +70,7 @@ try {
 
   run(["pack", "--pack-destination", artifactsRoot], cliRoot);
   const archives = (await readdir(artifactsRoot)).filter((file) => file.endsWith(".tgz"));
-  assert.deepEqual(archives, ["dayainow-beacon-0.1.0.tgz"]);
+  assert.deepEqual(archives, [archiveName]);
   const archivePath = path.join(artifactsRoot, archives[0]);
 
   run(["add", "--save-dev", "--offline", archivePath], consumerRoot);

@@ -44,7 +44,7 @@ interface StageDefinition {
 }
 
 function artifactsOfKind(observation: ProjectObservation, kind: DiscoveredArtifact["kind"]): DiscoveredArtifact[] {
-  return observation.files.artifacts.filter((artifact) => artifact.kind === kind);
+  return observation.files.artifacts.filter((artifact) => artifact.scope === "project" && artifact.kind === kind);
 }
 
 function documentRequirement(options: {
@@ -203,4 +203,3 @@ export function assessProjectProcess(observation: ProjectObservation): ProjectPr
     })),
   };
 }
-

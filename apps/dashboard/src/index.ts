@@ -111,7 +111,7 @@ export function renderDashboard(): string {
 
       <section class="metrics" aria-label="프로젝트 관찰 요약">
         <article class="card metric health-card" id="health-card"><div class="eyebrow">Project Health</div><strong class="metric-value" id="score">—</strong><span class="metric-note" id="headline">기준 확인 중</span></article>
-        <article class="card metric"><div class="eyebrow">발견한 산출물</div><strong class="metric-value" id="artifact-count">—</strong><span class="metric-note">파일 경로에서 자동 발견</span></article>
+        <article class="card metric"><div class="eyebrow">핵심 산출물</div><strong class="metric-value" id="artifact-count">—</strong><span class="metric-note" id="artifact-note">지원 문서 분리 중</span></article>
         <article class="card metric"><div class="eyebrow">Timeline</div><strong class="metric-value" id="timeline-count">—</strong><span class="metric-note">문서와 Git의 의미 단위 이벤트</span></article>
         <article class="card metric"><div class="eyebrow">작업 중 변경</div><strong class="metric-value" id="change-count">—</strong><span class="metric-note">아직 commit되지 않은 경로</span></article>
       </section>
@@ -191,7 +191,8 @@ export function renderDashboard(): string {
         const row = text('div', 'artifact-row', '');
         const content = text('div', '', '');
         content.append(text('p', 'artifact-name', artifact.name), text('div', 'artifact-path', artifact.path));
-        row.append(content, text('span', 'artifact-kind', kindLabels[artifact.kind] || '문서'));
+        const scope = artifact.scope === 'support' ? '지원' : '핵심';
+        row.append(content, text('span', 'artifact-kind', (kindLabels[artifact.kind] || '문서') + ' · ' + scope));
         item.append(row);
         return item;
       }
@@ -271,6 +272,8 @@ export function renderDashboard(): string {
           if (!historyResponse.ok) throw new Error('history request failed');
           const history = await historyResponse.json();
           const observation = snapshot.observation;
+          const projectArtifacts = observation.files.artifacts.filter((artifact) => artifact.scope !== 'support');
+          const supportArtifacts = observation.files.artifacts.filter((artifact) => artifact.scope === 'support');
 
           element('name').textContent = identity.name;
           element('root').textContent = identity.root;
@@ -281,18 +284,19 @@ export function renderDashboard(): string {
 
           element('score').textContent = snapshot.health.score + '%';
           element('headline').textContent = snapshot.health.headline;
-          element('artifact-count').textContent = String(observation.files.artifacts.length);
+          element('artifact-count').textContent = String(projectArtifacts.length);
+          element('artifact-note').textContent = '지원 문서 ' + supportArtifacts.length + '개 별도 발견';
           element('timeline-count').textContent = String(history.timelineCount);
           element('change-count').textContent = String(observation.git.changedFiles.length);
           element('health-card').className = 'card metric health-card ' + snapshot.health.status;
           renderProcess(snapshot.process);
 
           element('signal-count').textContent = snapshot.health.signals.length + ' signals';
-          element('artifact-label').textContent = observation.files.artifacts.length + ' files';
+          element('artifact-label').textContent = projectArtifacts.length + ' 핵심 · ' + supportArtifacts.length + ' 지원';
           element('timeline-label').textContent = history.timeline.length + (history.timeline.length < history.timelineCount ? ' / ' + history.timelineCount : '') + ' events';
           element('change-label').textContent = history.changes.length + (history.changes.length < history.changeCount ? ' / ' + history.changeCount : '') + ' changes';
           replaceList('signals', snapshot.health.signals, renderSignal, '현재 표시할 신호가 없습니다.');
-          replaceList('artifacts', observation.files.artifacts.slice(0, 8), renderArtifact, '발견한 문서 산출물이 없습니다.');
+          replaceList('artifacts', projectArtifacts.slice(0, 8), renderArtifact, '발견한 핵심 문서 산출물이 없습니다.');
           replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
           replaceList('changes', history.changes, renderChange, '첫 스캔을 기준선으로 저장했습니다. 다음 스캔부터 추가·변경·삭제를 기록합니다.');
           element('status').textContent = '연결됨';

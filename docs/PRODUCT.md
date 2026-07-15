@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 상태 | MVP v0.1.0 |
+| 상태 | MVP v0.2.0 |
 | 제품명 | Beacon |
 | 저장소 | `dayainow/beacon-project-os` |
 | 기준일 | 2026-07-15 |
@@ -46,6 +46,8 @@ Beacon은 실제 프로젝트 폴더를 프로젝트 그 자체로 취급한다.
 
 - `.git`, `.beacon`, 의존성과 빌드 산출물을 제외하고 프로젝트 파일을 읽는다.
 - README, 기획, 설계, 검증과 릴리스 문서를 경로와 함께 자동 분류한다.
+- 핵심 프로젝트 산출물과 AI skill·GitHub 설정 같은 지원 문서를 구분한다.
+- 지원 문서는 발견 목록에는 유지하지만 Project Health와 Gate 근거로 사용하지 않는다.
 - 최근 Git commit과 아직 commit되지 않은 경로를 표시한다.
 - 소개·기획·설계·Git·변경 이력의 기본 기준을 점검한다.
 - 모든 신호는 근거, 출처와 다음 행동을 포함한다.
@@ -63,6 +65,7 @@ Beacon은 실제 프로젝트 폴더를 프로젝트 그 자체로 취급한다.
 
 - Git commit의 변경 경로와 아직 commit되지 않은 문서 변경을 하나의 시간순 목록으로 합친다.
 - 문서 종류와 Conventional Commit type을 기준으로 의미 범주를 설명한다.
+- Conventional Commit이 아닌 일반적인 Fix·Document·Migrate 형태도 보수적으로 의미 범주를 설명한다.
 - 각 이벤트는 파일 경로 또는 commit hash를 출처로 유지한다.
 - commit에 발견한 산출물이 포함되면 해당 문서 경로를 commit 이벤트에 연결한다.
 - Git이 없는 프로젝트에서만 파일 수정 시각을 Timeline의 대체 근거로 사용한다.

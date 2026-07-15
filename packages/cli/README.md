@@ -1,9 +1,9 @@
-# @dayainow/beacon v0.1.0
+# @dayainow/beacon v0.2.0
 
 Beacon의 설치 가능한 CLI 패키지입니다. 프로젝트 폴더에서 `beacon init`, `beacon open`, `beacon identity`, `beacon export`를 실행합니다.
 
 ```bash
-pnpm add --save-dev https://github.com/dayainow/beacon-project-os/releases/download/v0.1.0/dayainow-beacon-0.1.0.tgz
+pnpm add --save-dev https://github.com/dayainow/beacon-project-os/releases/download/v0.2.0/dayainow-beacon-0.2.0.tgz
 pnpm exec beacon init
 pnpm exec beacon open
 ```
