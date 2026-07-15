@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { assessProjectProcess, type ProjectProcessAssessment } from "./process.js";
 
 const IGNORED_DIRECTORIES = new Set([
   ".beacon",
@@ -84,6 +85,7 @@ export interface DiscoveredArtifact {
 export interface FileObservation {
   total: number;
   source: number;
+  tests: number;
   config: number;
   truncated: boolean;
   artifacts: DiscoveredArtifact[];
@@ -173,6 +175,7 @@ export interface ProjectSnapshot {
   observation: ProjectObservation;
   health: ProjectHealth;
   timeline: ProjectTimeline;
+  process: ProjectProcessAssessment;
 }
 
 function toProjectPath(value: string): string {
@@ -191,10 +194,17 @@ function artifactKind(relativePath: string): ArtifactKind {
   return "document";
 }
 
+function isTestSource(relativePath: string): boolean {
+  const lower = relativePath.toLowerCase();
+  return /(^|\/)(__tests__|test|tests)(\/|$)/.test(lower)
+    || /\.(spec|test)\.[^.]+$/.test(lower);
+}
+
 async function scanFiles(root: string): Promise<FileObservation> {
   const artifacts: DiscoveredArtifact[] = [];
   let total = 0;
   let source = 0;
+  let tests = 0;
   let config = 0;
   let truncated = false;
 
@@ -227,13 +237,16 @@ async function scanFiles(root: string): Promise<FileObservation> {
 
       const extension = path.extname(entry.name).toLowerCase();
       const lowerName = entry.name.toLowerCase();
-      if (SOURCE_EXTENSIONS.has(extension)) source += 1;
+      const relativePath = toProjectPath(path.relative(root, absolutePath));
+      if (SOURCE_EXTENSIONS.has(extension)) {
+        source += 1;
+        if (isTestSource(relativePath)) tests += 1;
+      }
       if (CONFIG_NAMES.has(lowerName) || lowerName.endsWith(".config.js") || lowerName.endsWith(".config.ts")) {
         config += 1;
       }
 
       if (!DOCUMENT_EXTENSIONS.has(extension)) continue;
-      const relativePath = toProjectPath(path.relative(root, absolutePath));
 
       try {
         const fileStat = await stat(absolutePath);
@@ -252,7 +265,7 @@ async function scanFiles(root: string): Promise<FileObservation> {
 
   await visit(root);
   artifacts.sort((left, right) => right.modifiedAt.localeCompare(left.modifiedAt) || left.path.localeCompare(right.path));
-  return { total, source, config, truncated, artifacts };
+  return { total, source, tests, config, truncated, artifacts };
 }
 
 function git(root: string, args: string[], preserveWhitespace = false): string | null {
@@ -580,5 +593,6 @@ export async function scanProject(root: string, now = new Date()): Promise<Proje
     observation,
     health: evaluateProjectHealth(observation),
     timeline: buildProjectTimeline(observation),
+    process: assessProjectProcess(observation),
   };
 }

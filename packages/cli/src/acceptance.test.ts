@@ -117,6 +117,18 @@ test("beacon init → beacon open → project identity", async (context) => {
       snapshotCount: number;
       changeCount: number;
     };
+    process: {
+      currentStageId: string | null;
+      readyStages: number;
+      stages: Array<{
+        id: string;
+        state: string;
+        gate: {
+          status: string;
+          requirements: Array<{ id: string; satisfied: boolean; evidence: string[]; sources: string[]; nextAction: string }>;
+        };
+      }>;
+    };
   };
   assert.ok(snapshot.observation.files.artifacts.some((artifact) => artifact.path === "README.md"));
   assert.ok(snapshot.observation.files.artifacts.some((artifact) => artifact.path === "docs/PRODUCT.md"));
@@ -142,6 +154,14 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.equal(snapshot.persistence.recorded, true);
   assert.equal(snapshot.persistence.baseline, true);
   assert.equal(snapshot.persistence.snapshotCount, 1);
+  assert.equal(snapshot.process.currentStageId, "p1");
+  assert.equal(snapshot.process.stages[0].gate.status, "ready");
+  const designRequirement = snapshot.process.stages[1].gate.requirements[0];
+  assert.equal(designRequirement.id, "p1-architecture");
+  assert.equal(designRequirement.satisfied, false);
+  assert.ok(designRequirement.evidence.length);
+  assert.ok(designRequirement.sources.length);
+  assert.ok(designRequirement.nextAction.length);
 
   const unchangedResponse = await fetch(`${url}/api/snapshot`);
   const unchanged = await unchangedResponse.json() as { persistence: { recorded: boolean; snapshotCount: number } };
@@ -151,6 +171,8 @@ test("beacon init → beacon open → project identity", async (context) => {
   await writeFile(path.join(root, "README.md"), "# Observed Project\n\nReady for review.\n", "utf8");
   await utimes(path.join(root, "README.md"), new Date("2026-07-15T12:00:00.000Z"), new Date("2026-07-15T12:00:00.000Z"));
   await unlink(path.join(root, "docs", "PRODUCT.md"));
+  await writeFile(path.join(root, "docs", "PRD.md"), "# Replacement Plan\n", "utf8");
+  await utimes(path.join(root, "docs", "PRD.md"), new Date("2026-07-15T12:00:30.000Z"), new Date("2026-07-15T12:00:30.000Z"));
   await writeFile(path.join(root, "docs", "ARCHITECTURE.md"), "# Architecture\n", "utf8");
   await utimes(path.join(root, "docs", "ARCHITECTURE.md"), new Date("2026-07-15T12:01:00.000Z"), new Date("2026-07-15T12:01:00.000Z"));
 
@@ -162,16 +184,19 @@ test("beacon init → beacon open → project identity", async (context) => {
       snapshotCount: number;
       changes: Array<{ kind: string; entity: string; reference: string }>;
     };
+    process: { currentStageId: string | null };
   };
   assert.equal(changed.persistence.recorded, true);
   assert.equal(changed.persistence.baseline, false);
   assert.equal(changed.persistence.snapshotCount, 2);
+  assert.equal(changed.process.currentStageId, "p2");
   assert.deepEqual(
     changed.persistence.changes
       .filter((change) => change.entity === "artifact")
       .map(({ kind, reference }) => ({ kind, reference })),
     [
       { kind: "added", reference: "docs/ARCHITECTURE.md" },
+      { kind: "added", reference: "docs/PRD.md" },
       { kind: "deleted", reference: "docs/PRODUCT.md" },
       { kind: "modified", reference: "README.md" },
     ],
@@ -186,8 +211,8 @@ test("beacon init → beacon open → project identity", async (context) => {
     changes: Array<{ kind: string }>;
   };
   assert.equal(history.snapshotCount, 2);
-  assert.equal(history.changeCount, 3);
-  assert.equal(history.changes.length, 3);
+  assert.equal(history.changeCount, 4);
+  assert.equal(history.changes.length, 4);
   assert.ok(history.timelineCount >= 3);
 
   const dashboardResponse = await fetch(url);
@@ -195,6 +220,8 @@ test("beacon init → beacon open → project identity", async (context) => {
   const dashboard = await dashboardResponse.text();
   assert.match(dashboard, /Project Identity/);
   assert.match(dashboard, /Beacon Signals/);
+  assert.match(dashboard, /P0–P4 Process/);
+  assert.match(dashboard, /Gate 준비도/);
   assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /Append-only Activity/);
   assert.match(dashboard, /\/api\/snapshot/);

@@ -33,6 +33,26 @@ export function renderDashboard(): string {
       .health-card { border-left: 4px solid #5b43ff; }
       .health-card.attention { border-left-color: #f0a100; }
       .health-card.at_risk { border-left-color: #df4b57; }
+      .process { margin-bottom: 12px; overflow: hidden; }
+      .stage-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding: 20px 24px; }
+      .stage { min-height: 116px; border: 1px solid #e2e3e6; border-radius: 13px; padding: 15px; background: #fafafa; }
+      .stage.ready { border-color: #bdebd7; background: #effbf5; }
+      .stage.current { border-color: #8f7fff; background: #f6f3ff; box-shadow: inset 0 0 0 1px #8f7fff; }
+      .stage-code { color: #777b85; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; }
+      .stage-name { display: block; margin-top: 9px; font-size: 15px; }
+      .stage-state { display: block; margin-top: 16px; color: #777b85; font-size: 11px; }
+      .stage.ready .stage-state { color: #08764d; }
+      .stage.current .stage-state { color: #5b43ff; font-weight: 800; }
+      .gate-focus { border-top: 1px solid #ececef; padding: 20px 24px 24px; background: #fcfcfd; }
+      .gate-focus h3 { margin: 6px 0 4px; font-size: 17px; }
+      .gate-objective { margin: 0; color: #777b85; font-size: 12px; }
+      .requirements { display: grid; gap: 8px; margin-top: 16px; }
+      .requirement { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 12px; border: 1px solid #e4e5e8; background: #fff; border-radius: 10px; }
+      .requirement-dot { width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: #df4b57; }
+      .requirement.satisfied .requirement-dot { background: #13a76f; }
+      .requirement-title { margin: 0; font-size: 13px; font-weight: 800; }
+      .requirement-evidence { margin: 4px 0 0; color: #777b85; font-size: 11px; line-height: 1.45; }
+      .requirement-action { color: #5b43ff; font-size: 11px; text-align: right; max-width: 270px; }
       .layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 12px; }
       .panel { overflow: hidden; }
       .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 24px 18px; border-bottom: 1px solid #ececef; }
@@ -63,8 +83,8 @@ export function renderDashboard(): string {
       .changes { margin-top: 12px; }
       .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
       .error { padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
-      @media (max-width: 860px) { .metrics { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
-      @media (max-width: 560px) { main { width: min(100% - 24px, 1120px); padding-top: 28px; } header { align-items: flex-start; flex-direction: column; } .metrics { grid-template-columns: 1fr; } .metric { min-height: auto; } }
+      @media (max-width: 860px) { .metrics { grid-template-columns: repeat(2, 1fr); } .stage-grid { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
+      @media (max-width: 560px) { main { width: min(100% - 24px, 1120px); padding-top: 28px; } header { align-items: flex-start; flex-direction: column; } .metrics, .stage-grid { grid-template-columns: 1fr; } .metric { min-height: auto; } .requirement { grid-template-columns: auto minmax(0, 1fr); } .requirement-action { grid-column: 2; text-align: left; max-width: none; } }
     </style>
   </head>
   <body>
@@ -98,6 +118,17 @@ export function renderDashboard(): string {
 
       <div id="error" class="error" hidden></div>
 
+      <section class="card process">
+        <div class="panel-head"><div><div class="eyebrow">P0–P4 Process</div><h2>단계와 Gate 준비도</h2></div><span class="count" id="process-count">0 / 5 ready</span></div>
+        <div class="stage-grid" id="stages"></div>
+        <div class="gate-focus">
+          <div class="eyebrow">Current Gate</div>
+          <h3 id="gate-title">단계 근거를 확인하고 있습니다.</h3>
+          <p class="gate-objective" id="gate-objective"></p>
+          <div class="requirements" id="requirements"></div>
+        </div>
+      </section>
+
       <section class="layout">
         <article class="card panel">
           <div class="panel-head"><div><div class="eyebrow">Beacon Signals</div><h2>부족한 부분과 다음 행동</h2></div><span class="count" id="signal-count">0 signals</span></div>
@@ -126,6 +157,7 @@ export function renderDashboard(): string {
       const levelLabels = { warning: '보완 필요', attention: '확인 필요', ready: '준비됨' };
       const categoryLabels = { planning: '기획', design: '설계', implementation: '기능', issue: '문제 해결', quality: '검증', delivery: '릴리스', operations: '운영', documentation: '문서', change: '변경' };
       const changeLabels = { added: '추가', modified: '변경', deleted: '삭제' };
+      const stageStateLabels = { ready: '자동 근거 준비', current: '현재 확인 단계', upcoming: '후속 단계' };
 
       function text(tag, className, value) {
         const node = document.createElement(tag);
@@ -189,6 +221,38 @@ export function renderDashboard(): string {
         return item;
       }
 
+      function renderStage(stage) {
+        const item = text('div', 'stage ' + stage.state, '');
+        item.append(text('span', 'stage-code', stage.id));
+        item.append(text('strong', 'stage-name', stage.name));
+        item.append(text('span', 'stage-state', stageStateLabels[stage.state] + ' · ' + stage.gate.satisfiedRequirements + '/' + stage.gate.totalRequirements));
+        return item;
+      }
+
+      function renderRequirement(requirement) {
+        const item = text('div', 'requirement' + (requirement.satisfied ? ' satisfied' : ''), '');
+        const content = text('div', '', '');
+        content.append(text('p', 'requirement-title', requirement.label));
+        content.append(text('p', 'requirement-evidence', requirement.evidence.join(' · ')));
+        item.append(text('span', 'requirement-dot', ''), content);
+        item.append(text('span', 'requirement-action', requirement.satisfied ? '근거 확인됨' : requirement.nextAction));
+        return item;
+      }
+
+      function renderProcess(process) {
+        const stages = element('stages');
+        stages.replaceChildren(...process.stages.map(renderStage));
+        element('process-count').textContent = process.readyStages + ' / ' + process.totalStages + ' ready';
+        const focus = process.stages.find((stage) => stage.id === process.currentStageId) || process.stages.at(-1);
+        if (!focus) return;
+        element('gate-title').textContent = process.currentStageId
+          ? focus.id.toUpperCase() + ' ' + focus.name + ' Gate · 증거 확인 필요'
+          : 'P0–P4 자동 근거가 모두 준비되었습니다';
+        element('gate-objective').textContent = focus.objective + ' 자동 관찰 결과이며 Gate 승인을 대신하지 않습니다.';
+        const requirements = element('requirements');
+        requirements.replaceChildren(...focus.gate.requirements.map(renderRequirement));
+      }
+
       async function loadProject() {
         element('refresh').disabled = true;
         element('status').textContent = '스캔 중';
@@ -221,6 +285,7 @@ export function renderDashboard(): string {
           element('timeline-count').textContent = String(history.timelineCount);
           element('change-count').textContent = String(observation.git.changedFiles.length);
           element('health-card').className = 'card metric health-card ' + snapshot.health.status;
+          renderProcess(snapshot.process);
 
           element('signal-count').textContent = snapshot.health.signals.length + ' signals';
           element('artifact-label').textContent = observation.files.artifacts.length + ' files';

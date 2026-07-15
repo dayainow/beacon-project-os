@@ -4,6 +4,7 @@ import path from "node:path";
 
 export * from "./scanner.js";
 export * from "./history.js";
+export * from "./process.js";
 
 export const BEACON_DIRECTORY = ".beacon";
 export const CONFIG_VERSION = 1;

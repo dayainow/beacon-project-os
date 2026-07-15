@@ -37,6 +37,7 @@ filesystem + git
   → scanProject(root)
   → ProjectObservation
   ├─ evaluateProjectHealth(observation)
+  ├─ assessProjectProcess(observation)
   └─ buildProjectTimeline(observation)
   → ProjectHistoryStore.record(snapshot)
   → .beacon/beacon.db
@@ -47,6 +48,8 @@ filesystem + git
 파일 스캐너는 심볼릭 링크를 따라가지 않고 `.git`, `.beacon`, 의존성, cache와 build 결과를 제외한다. 한 번에 최대 10,000개 파일을 관찰하며 제한을 넘으면 `truncated`로 설명한다. Git 명령은 shell 없이 현재 프로젝트 경로에만 실행하고 3초 제한을 둔다.
 
 Project Health는 소개, 기획, 설계, Git 저장소와 commit 이력의 다섯 기준을 점검한다. 점수만 표시하지 않고 각 신호에 근거, 출처와 다음 행동을 포함한다. 미커밋 변경은 실패가 아니라 검토가 필요한 진행 상태로 취급한다.
+
+P0–P4 Process Assessment는 파일·Git 관찰 결과를 기본 Template의 요구조건에 연결한다. P0는 개요·기획, P1은 설계, P2는 소스·commit, P3는 테스트 패턴 또는 검증 문서, P4는 릴리스 문서를 사용한다. 첫 번째 `needs_evidence` 단계를 현재 단계로 표시하지만 자동으로 Gate를 승인하거나 프로젝트 단계를 변경하지 않는다.
 
 Project Timeline은 최근 Git commit 최대 20개의 변경 경로와 아직 commit되지 않은 문서 변경을 결합한다. 깨끗한 Git 문서는 파일 수정 시각으로 중복 표시하지 않고 해당 문서를 변경한 최근 commit에 연결한다. Git이 없는 프로젝트에서만 파일 수정 시각을 대체 근거로 사용한다. 문서는 종류를, commit은 Conventional Commit type을 사용해 의미 범주를 부여한다. 원본에 없는 의미를 AI로 추측하지 않으며 분류할 수 없는 변경은 `change`로 유지한다. 최신 30개 이벤트를 반환하고 `total`과 `truncated`로 관찰 범위를 설명한다.
 

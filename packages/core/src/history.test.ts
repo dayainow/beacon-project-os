@@ -35,7 +35,7 @@ function snapshot(
   return {
     scannedAt,
     observation: {
-      files: { total: artifacts.length, source: 0, config: 0, truncated: false, artifacts },
+      files: { total: artifacts.length, source: 0, tests: 0, config: 0, truncated: false, artifacts },
       git: {
         isRepository: true,
         root: "/project",
@@ -54,6 +54,13 @@ function snapshot(
       signals: [],
     },
     timeline: { events: [], total: 0, truncated: false },
+    process: {
+      templateId: "beacon-default-p0-p4-v1",
+      currentStageId: "p0",
+      readyStages: 0,
+      totalStages: 5,
+      stages: [],
+    },
   };
 }
 
@@ -89,4 +96,3 @@ test("treats the first snapshot as a baseline without synthetic changes", () => 
 
   assert.deepEqual(diffProjectSnapshots(null, baseline), []);
 });
-

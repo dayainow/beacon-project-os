@@ -13,5 +13,7 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(dashboard, /\/api\/history/);
   assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /Append-only Activity/);
+  assert.match(dashboard, /P0–P4 Process/);
+  assert.match(dashboard, /Gate 준비도/);
   assert.doesNotMatch(script, /innerHTML|insertAdjacentHTML|document\.write/);
 });

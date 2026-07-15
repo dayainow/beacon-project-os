@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
-import { buildProjectTimeline, evaluateProjectHealth, type ProjectObservation } from "./scanner.js";
+import { buildProjectTimeline, evaluateProjectHealth, scanProject, type ProjectObservation } from "./scanner.js";
 
 test("explains missing project foundations with evidence and next actions", () => {
   const observation: ProjectObservation = {
     files: {
       total: 2,
       source: 0,
+      tests: 0,
       config: 1,
       truncated: false,
       artifacts: [{
@@ -43,6 +47,7 @@ test("combines document changes and commits into a categorized chronological tim
     files: {
       total: 2,
       source: 0,
+      tests: 0,
       config: 0,
       truncated: false,
       artifacts: [{
@@ -79,4 +84,19 @@ test("combines document changes and commits into a categorized chronological tim
   assert.equal(timeline.events[1].category, "issue");
   assert.equal(timeline.events[1].reference, "abcdef0");
   assert.deepEqual(timeline.events[1].relatedArtifacts, ["docs/PRODUCT.md"]);
+});
+
+test("counts common test source patterns for the P3 gate", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "beacon-tests-"));
+  await mkdir(path.join(root, "src"));
+  await mkdir(path.join(root, "tests"));
+  await writeFile(path.join(root, "src", "index.ts"), "export const value = 1;\n", "utf8");
+  await writeFile(path.join(root, "src", "index.test.ts"), "// test\n", "utf8");
+  await writeFile(path.join(root, "tests", "api.spec.js"), "// test\n", "utf8");
+
+  const snapshot = await scanProject(root, new Date("2026-07-15T10:00:00.000Z"));
+
+  assert.equal(snapshot.observation.files.source, 3);
+  assert.equal(snapshot.observation.files.tests, 2);
+  assert.equal(snapshot.process.stages.find((stage) => stage.id === "p3")?.gate.status, "ready");
 });
