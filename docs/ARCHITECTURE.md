@@ -78,3 +78,14 @@ readProjectIdentity(root) + scanProject(root)
 ```
 
 `generateProjectBook`은 `@beacon/core`의 순수 Markdown 생성기이며 로컬 파일을 직접 쓰지 않는다. CLI가 초기화 여부 확인, 최신 스캔 저장, 출력 위치 해석과 파일 쓰기를 담당한다. 기본 출력은 프로젝트 루트지만 `--output` 상대 경로는 항상 해당 프로젝트 루트를 기준으로 해석한다. 파일·Git 스캐너는 `PROJECT_BOOK.md`를 Beacon 파생 산출물로 제외해 반복 내보내기가 자체 변경 이력을 만들지 않는다. 공유 시 로컬 환경 정보가 새지 않도록 Project Identity의 절대 `root`는 문서에 출력하지 않는다.
+
+## 배포 경계
+
+```text
+@beacon/core + @beacon/dashboard + @beacon/runtime + packages/cli
+  → esbuild Node ESM bundle
+  → @dayainow/beacon/dist/index.js
+  → dayainow-beacon-0.1.0.tgz
+```
+
+저장소 내부 경계는 개발과 테스트를 위해 유지하지만 배포 CLI는 비공개 workspace 패키지를 모두 포함한 단일 실행 파일이다. 설치 후에는 별도 Beacon runtime dependency가 없으며 Node.js 22.13 이상의 내장 `node:sqlite`만 사용한다. 패키지 인수 검증은 임시 소비자와 프로젝트를 만들고 tarball을 오프라인 설치한 뒤 `init`, `identity`, `open`, Snapshot API, Dashboard와 `export`를 실행한다.

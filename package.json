@@ -1,6 +1,6 @@
 {
   "name": "beacon-project-os",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Local-first Project Navigation OS",
   "repository": {
@@ -12,10 +12,12 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
-    "verify": "pnpm build && pnpm lint && pnpm test"
+    "verify:package": "node scripts/verify-package.mjs",
+    "verify": "pnpm build && pnpm lint && pnpm test && pnpm verify:package"
   },
   "devDependencies": {
     "@types/node": "22.15.3",
+    "esbuild": "0.28.1",
     "turbo": "2.10.4",
     "typescript": "5.8.3"
   },
@@ -24,4 +26,3 @@
     "node": ">=22.13"
   }
 }
-

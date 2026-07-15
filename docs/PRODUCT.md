@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 상태 | P0 기준선 |
+| 상태 | MVP v0.1.0 |
 | 제품명 | Beacon |
 | 저장소 | `dayainow/beacon-project-os` |
 | 기준일 | 2026-07-15 |
@@ -137,6 +137,7 @@ Project Identity + 현재 Snapshot + append-only History
 - 의미 단위 Timeline
 - 프로젝트 전용 SQLite
 - 최대 5개의 기본 메뉴: 개요, 단계, 산출물, 히스토리, 설정
+- 프로젝트에 설치 가능한 단일 CLI tarball과 clean-room 인수 검증
 
 ## 비목표
 
