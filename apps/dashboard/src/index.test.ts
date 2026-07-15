@@ -14,6 +14,13 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(dashboard, /\/api\/journey/);
   assert.match(dashboard, /Project Journey/);
   assert.match(dashboard, /현재 Cycle/);
+  assert.match(dashboard, /data-view-link="overview"/);
+  assert.match(dashboard, /data-view-link="process"/);
+  assert.match(dashboard, /data-view-link="artifacts"/);
+  assert.match(dashboard, /data-view-link="history"/);
+  assert.equal((dashboard.match(/data-view-panel=/g) ?? []).length, 4);
+  assert.match(script, /window\.addEventListener\('hashchange'/);
+  assert.match(script, /aria-current/);
   assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /Append-only Activity/);
   assert.match(dashboard, /P0–P4 Process/);

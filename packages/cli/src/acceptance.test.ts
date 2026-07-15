@@ -308,6 +308,10 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /Append-only Activity/);
   assert.match(dashboard, /Project Journey/);
+  assert.match(dashboard, /data-view-link="overview"/);
+  assert.match(dashboard, /data-view-link="process"/);
+  assert.match(dashboard, /data-view-link="artifacts"/);
+  assert.match(dashboard, /data-view-link="history"/);
   assert.match(dashboard, /\/api\/snapshot/);
   assert.match(dashboard, /\/api\/history/);
   assert.match(dashboard, /\/api\/journey/);

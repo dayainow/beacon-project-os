@@ -148,6 +148,24 @@ Project Identity + 현재 Snapshot + append-only History
 - Dashboard는 현재 Cycle과 목표, 시작 기준선을 자동 관찰 결과보다 먼저 보여준다.
 - 첫 세로 흐름은 Cycle 시작과 조회까지만 포함하며, 종료 요약과 Cycle별 Project Book은 다음 흐름에서 추가한다.
 
+### 8. Dashboard Navigation
+
+```text
+긴 단일 페이지
+→ 개요 · 단계 · 산출물 · 히스토리 분리
+→ 왼쪽 내비게이션과 URL hash로 즉시 전환
+```
+
+#### 인수 조건
+
+- 개요는 Project Identity, 현재 Cycle, 핵심 지표와 다음 행동만 보여준다.
+- 단계는 P0–P4와 현재 Gate 근거를 보여준다.
+- 산출물은 발견한 핵심 산출물 전체를 보여준다.
+- 히스토리는 누적 Timeline과 스캔 사이 변화를 보여준다.
+- 화면 전환은 데이터를 다시 스캔하지 않고 즉시 이루어진다.
+- 현재 화면은 URL hash에 남아 새로고침과 링크 공유 후에도 유지된다.
+- 좁은 화면에서는 왼쪽 내비게이션을 상단 가로 메뉴로 바꾼다.
+
 ## MVP
 
 - 단일 로컬 프로젝트 폴더

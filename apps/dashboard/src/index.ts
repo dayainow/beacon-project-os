@@ -10,10 +10,28 @@ export function renderDashboard(): string {
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100vh; }
       button { font: inherit; }
-      main { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 52px 0 72px; }
+      a { color: inherit; }
+      .app-shell { width: min(1440px, 100%); min-height: 100vh; margin: 0 auto; display: grid; grid-template-columns: 248px minmax(0, 1fr); }
+      .sidebar { position: sticky; top: 0; height: 100vh; padding: 30px 20px 24px; border-right: 1px solid #dedfe3; background: rgb(250 250 251 / 94%); backdrop-filter: blur(16px); display: flex; flex-direction: column; }
+      .sidebar-brand { padding: 0 10px 26px; border-bottom: 1px solid #e5e5e8; }
+      .sidebar-brand strong { display: block; margin-top: 6px; font-size: 22px; letter-spacing: -.035em; }
+      .sidebar-brand span { display: block; margin-top: 5px; color: #858892; font-size: 11px; line-height: 1.45; }
+      .navigation { display: grid; gap: 6px; padding: 24px 0; }
+      .nav-link { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 13px; border: 1px solid transparent; border-radius: 12px; text-decoration: none; color: #555962; }
+      .nav-link:hover { border-color: #dedfe3; background: #fff; }
+      .nav-link[aria-current="page"] { border-color: #d9d2ff; background: #f4f1ff; color: #3f2ec4; box-shadow: 0 6px 18px rgb(63 46 196 / 8%); }
+      .nav-name { font-size: 13px; font-weight: 800; }
+      .nav-description { grid-column: 1 / -1; color: #8a8d95; font-size: 10px; }
+      .nav-count { min-width: 22px; padding: 2px 6px; border-radius: 999px; background: #ececf0; color: #6c707a; font-size: 10px; font-weight: 800; text-align: center; }
+      .nav-link[aria-current="page"] .nav-count { background: #ded7ff; color: #4935d0; }
+      .sidebar-project { margin-top: auto; padding: 16px 12px 0; border-top: 1px solid #e5e5e8; }
+      .sidebar-project strong { display: block; margin-top: 7px; font-size: 13px; overflow-wrap: anywhere; }
+      .sidebar-project span { display: block; margin-top: 5px; color: #858892; font-size: 10px; }
+      main { width: min(1160px, calc(100% - 48px)); margin: 0 auto; padding: 44px 0 72px; }
       header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
       .brand { color: #5b43ff; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
       h1 { margin: 8px 0 0; font-size: clamp(34px, 5vw, 52px); letter-spacing: -.045em; }
+      .page-description { margin: 8px 0 0; color: #777b85; font-size: 13px; }
       .header-actions { display: flex; align-items: center; gap: 10px; }
       .status { border: 1px solid #ddd8ff; background: #f5f2ff; color: #5b43ff; border-radius: 999px; padding: 9px 12px; font-size: 12px; font-weight: 800; }
       .refresh { border: 1px solid #d8d9dd; background: #fff; border-radius: 10px; padding: 9px 13px; color: #34373d; cursor: pointer; font-weight: 700; }
@@ -26,20 +44,22 @@ export function renderDashboard(): string {
       .root { margin: 0; color: #6c707a; font-size: 13px; overflow-wrap: anywhere; }
       .identity-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
       .chip { border: 1px solid #e1e2e5; background: #fafafa; border-radius: 999px; padding: 7px 10px; font-size: 12px; color: #555962; }
-      .journey { margin-top: 12px; padding: 26px; border-left: 4px solid #5b43ff; }
+      .view { display: grid; gap: 12px; }
+      .view[hidden] { display: none; }
+      .journey { padding: 26px; border-left: 4px solid #5b43ff; }
       .journey-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
       .journey h2 { margin-top: 8px; }
       .journey-goal { margin: 10px 0 0; max-width: 760px; color: #555962; font-size: 14px; line-height: 1.6; }
       .journey-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
       .cycle-number { color: #5b43ff; font: 800 12px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
-      .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+      .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
       .metric { padding: 20px; min-height: 118px; }
       .metric-value { display: block; margin-top: 12px; font-size: 28px; font-weight: 850; letter-spacing: -.04em; }
       .metric-note { display: block; margin-top: 4px; color: #777b85; font-size: 12px; }
       .health-card { border-left: 4px solid #5b43ff; }
       .health-card.attention { border-left-color: #f0a100; }
       .health-card.at_risk { border-left-color: #df4b57; }
-      .process { margin-bottom: 12px; overflow: hidden; }
+      .process { overflow: hidden; }
       .stage-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding: 20px 24px; }
       .stage { min-height: 116px; border: 1px solid #e2e3e6; border-radius: 13px; padding: 15px; background: #fafafa; }
       .stage.ready { border-color: #bdebd7; background: #effbf5; }
@@ -85,94 +105,135 @@ export function renderDashboard(): string {
       .timeline-side { display: grid; justify-items: end; gap: 7px; }
       .timeline-category { border-radius: 999px; padding: 5px 8px; background: #f2efff; color: #5b43ff; font-size: 10px; font-weight: 850; white-space: nowrap; }
       .timeline-meta { color: #8a8d95; font-size: 11px; white-space: nowrap; }
-      .timeline { margin-top: 12px; }
-      .changes { margin-top: 12px; }
       .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
-      .error { padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
-      @media (max-width: 860px) { .metrics { grid-template-columns: repeat(2, 1fr); } .stage-grid { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
-      @media (max-width: 560px) { main { width: min(100% - 24px, 1120px); padding-top: 28px; } header { align-items: flex-start; flex-direction: column; } .metrics, .stage-grid { grid-template-columns: 1fr; } .metric { min-height: auto; } .requirement { grid-template-columns: auto minmax(0, 1fr); } .requirement-action { grid-column: 2; text-align: left; max-width: none; } }
+      .error { margin-bottom: 12px; padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
+      @media (max-width: 960px) { .app-shell { display: block; } .sidebar { position: sticky; z-index: 10; width: 100%; height: auto; padding: 14px 20px; border-right: 0; border-bottom: 1px solid #dedfe3; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 20px; } .sidebar-brand { padding: 0; border: 0; } .sidebar-brand strong { margin: 0; font-size: 18px; } .sidebar-brand .brand, .sidebar-brand span, .sidebar-project, .nav-description { display: none; } .navigation { display: flex; justify-content: flex-end; gap: 5px; padding: 0; overflow-x: auto; } .nav-link { display: flex; align-items: center; gap: 7px; padding: 9px 11px; white-space: nowrap; } .metrics { grid-template-columns: repeat(2, 1fr); } .stage-grid { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
+      @media (max-width: 560px) { .sidebar { display: block; padding: 12px; } .sidebar-brand { display: none; } .navigation { justify-content: flex-start; } .nav-count { display: none; } main { width: min(100% - 24px, 1160px); padding-top: 28px; } header { align-items: flex-start; flex-direction: column; } .metrics, .stage-grid { grid-template-columns: 1fr; } .metric { min-height: auto; } .journey-top { display: block; } .cycle-number { display: block; margin-top: 12px; } .requirement { grid-template-columns: auto minmax(0, 1fr); } .requirement-action { grid-column: 2; text-align: left; max-width: none; } }
     </style>
   </head>
   <body>
-    <main>
-      <header>
-        <div><div class="brand">Beacon</div><h1>프로젝트 개요</h1></div>
-        <div class="header-actions">
-          <div class="status" id="status">프로젝트 확인 중</div>
-          <button class="refresh" id="refresh" type="button">다시 스캔</button>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand">Beacon</div>
+          <strong>Project OS</strong>
+          <span>프로젝트의 방향과 여정을 탐색합니다.</span>
         </div>
-      </header>
-
-      <section class="card identity" aria-live="polite">
-        <div class="eyebrow">Project Identity</div>
-        <h2 id="name">불러오는 중…</h2>
-        <p class="root" id="root"></p>
-        <div class="identity-meta">
-          <span class="chip" id="branch">Git 확인 중</span>
-          <span class="chip" id="head">HEAD —</span>
-          <span class="chip" id="scanned">스캔 대기</span>
-          <span class="chip" id="history-count">기록 확인 중</span>
+        <nav class="navigation" aria-label="프로젝트 화면">
+          <a class="nav-link" href="#overview" data-view-link="overview" aria-current="page">
+            <span class="nav-name">개요</span><span class="nav-count" id="nav-overview-count">—</span>
+            <span class="nav-description">현재 Cycle과 다음 행동</span>
+          </a>
+          <a class="nav-link" href="#process" data-view-link="process">
+            <span class="nav-name">단계</span><span class="nav-count" id="nav-process-count">—</span>
+            <span class="nav-description">P0–P4와 Gate 준비도</span>
+          </a>
+          <a class="nav-link" href="#artifacts" data-view-link="artifacts">
+            <span class="nav-name">산출물</span><span class="nav-count" id="nav-artifact-count">—</span>
+            <span class="nav-description">발견한 프로젝트 결과물</span>
+          </a>
+          <a class="nav-link" href="#history" data-view-link="history">
+            <span class="nav-name">히스토리</span><span class="nav-count" id="nav-history-count">—</span>
+            <span class="nav-description">Timeline과 누적 변화</span>
+          </a>
+        </nav>
+        <div class="sidebar-project">
+          <div class="eyebrow">Current Project</div>
+          <strong id="sidebar-project-name">불러오는 중…</strong>
+          <span id="sidebar-cycle">Cycle 확인 중</span>
         </div>
-      </section>
+      </aside>
 
-      <section class="card journey" aria-live="polite">
-        <div class="journey-top">
+      <main>
+        <header>
           <div>
-            <div class="eyebrow">Project Journey · 현재 Cycle</div>
-            <h2 id="cycle-name">Cycle을 확인하고 있습니다.</h2>
-            <p class="journey-goal" id="cycle-goal">프로젝트 목표와 시작 기준선을 불러오는 중입니다.</p>
+            <div class="brand">Project Workspace</div>
+            <h1 id="page-title">프로젝트 개요</h1>
+            <p class="page-description" id="page-description">현재 Cycle과 프로젝트의 중요한 신호를 확인합니다.</p>
           </div>
-          <span class="cycle-number" id="cycle-number">—</span>
+          <div class="header-actions">
+            <div class="status" id="status">프로젝트 확인 중</div>
+            <button class="refresh" id="refresh" type="button">다시 스캔</button>
+          </div>
+        </header>
+
+        <div id="error" class="error" hidden></div>
+
+        <div class="view" id="view-overview" data-view-panel="overview">
+          <section class="card identity" aria-live="polite">
+            <div class="eyebrow">Project Identity</div>
+            <h2 id="name">불러오는 중…</h2>
+            <p class="root" id="root"></p>
+            <div class="identity-meta">
+              <span class="chip" id="branch">Git 확인 중</span>
+              <span class="chip" id="head">HEAD —</span>
+              <span class="chip" id="scanned">스캔 대기</span>
+              <span class="chip" id="history-count">기록 확인 중</span>
+            </div>
+          </section>
+
+          <section class="card journey" aria-live="polite">
+            <div class="journey-top">
+              <div>
+                <div class="eyebrow">Project Journey · 현재 Cycle</div>
+                <h2 id="cycle-name">Cycle을 확인하고 있습니다.</h2>
+                <p class="journey-goal" id="cycle-goal">프로젝트 목표와 시작 기준선을 불러오는 중입니다.</p>
+              </div>
+              <span class="cycle-number" id="cycle-number">—</span>
+            </div>
+            <div class="journey-meta">
+              <span class="chip" id="cycle-started">시작 시점 · —</span>
+              <span class="chip" id="cycle-baseline">기준선 · —</span>
+              <span class="chip" id="cycle-artifacts">시작 산출물 · —</span>
+            </div>
+          </section>
+
+          <section class="metrics" aria-label="프로젝트 관찰 요약">
+            <article class="card metric health-card" id="health-card"><div class="eyebrow">Project Health</div><strong class="metric-value" id="score">—</strong><span class="metric-note" id="headline">기준 확인 중</span></article>
+            <article class="card metric"><div class="eyebrow">핵심 산출물</div><strong class="metric-value" id="artifact-count">—</strong><span class="metric-note" id="artifact-note">지원 문서 분리 중</span></article>
+            <article class="card metric"><div class="eyebrow">Timeline</div><strong class="metric-value" id="timeline-count">—</strong><span class="metric-note">문서와 Git의 의미 단위 이벤트</span></article>
+            <article class="card metric"><div class="eyebrow">작업 중 변경</div><strong class="metric-value" id="change-count">—</strong><span class="metric-note">아직 commit되지 않은 경로</span></article>
+          </section>
+
+          <section class="card panel">
+            <div class="panel-head"><div><div class="eyebrow">Beacon Signals</div><h2>부족한 부분과 다음 행동</h2></div><span class="count" id="signal-count">0 signals</span></div>
+            <ul class="list" id="signals"><li class="empty">프로젝트 신호를 계산하고 있습니다.</li></ul>
+          </section>
         </div>
-        <div class="journey-meta">
-          <span class="chip" id="cycle-started">시작 시점 · —</span>
-          <span class="chip" id="cycle-baseline">기준선 · —</span>
-          <span class="chip" id="cycle-artifacts">시작 산출물 · —</span>
+
+        <div class="view" id="view-process" data-view-panel="process" hidden>
+          <section class="card process">
+            <div class="panel-head"><div><div class="eyebrow">P0–P4 Process</div><h2>단계와 Gate 준비도</h2></div><span class="count" id="process-count">0 / 5 ready</span></div>
+            <div class="stage-grid" id="stages"></div>
+            <div class="gate-focus">
+              <div class="eyebrow">Current Gate</div>
+              <h3 id="gate-title">단계 근거를 확인하고 있습니다.</h3>
+              <p class="gate-objective" id="gate-objective"></p>
+              <div class="requirements" id="requirements"></div>
+            </div>
+          </section>
         </div>
-      </section>
 
-      <section class="metrics" aria-label="프로젝트 관찰 요약">
-        <article class="card metric health-card" id="health-card"><div class="eyebrow">Project Health</div><strong class="metric-value" id="score">—</strong><span class="metric-note" id="headline">기준 확인 중</span></article>
-        <article class="card metric"><div class="eyebrow">핵심 산출물</div><strong class="metric-value" id="artifact-count">—</strong><span class="metric-note" id="artifact-note">지원 문서 분리 중</span></article>
-        <article class="card metric"><div class="eyebrow">Timeline</div><strong class="metric-value" id="timeline-count">—</strong><span class="metric-note">문서와 Git의 의미 단위 이벤트</span></article>
-        <article class="card metric"><div class="eyebrow">작업 중 변경</div><strong class="metric-value" id="change-count">—</strong><span class="metric-note">아직 commit되지 않은 경로</span></article>
-      </section>
-
-      <div id="error" class="error" hidden></div>
-
-      <section class="card process">
-        <div class="panel-head"><div><div class="eyebrow">P0–P4 Process</div><h2>단계와 Gate 준비도</h2></div><span class="count" id="process-count">0 / 5 ready</span></div>
-        <div class="stage-grid" id="stages"></div>
-        <div class="gate-focus">
-          <div class="eyebrow">Current Gate</div>
-          <h3 id="gate-title">단계 근거를 확인하고 있습니다.</h3>
-          <p class="gate-objective" id="gate-objective"></p>
-          <div class="requirements" id="requirements"></div>
+        <div class="view" id="view-artifacts" data-view-panel="artifacts" hidden>
+          <section class="card panel">
+            <div class="panel-head"><div><div class="eyebrow">Deliverables</div><h2>발견한 산출물</h2></div><span class="count" id="artifact-label">0 files</span></div>
+            <ul class="list" id="artifacts"><li class="empty">산출물을 찾고 있습니다.</li></ul>
+          </section>
         </div>
-      </section>
 
-      <section class="layout">
-        <article class="card panel">
-          <div class="panel-head"><div><div class="eyebrow">Beacon Signals</div><h2>부족한 부분과 다음 행동</h2></div><span class="count" id="signal-count">0 signals</span></div>
-          <ul class="list" id="signals"><li class="empty">프로젝트 신호를 계산하고 있습니다.</li></ul>
-        </article>
+        <div class="view" id="view-history" data-view-panel="history" hidden>
+          <section class="card panel timeline">
+            <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
+            <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
+          </section>
 
-        <article class="card panel">
-          <div class="panel-head"><div><div class="eyebrow">Deliverables</div><h2>발견한 산출물</h2></div><span class="count" id="artifact-label">0 files</span></div>
-          <ul class="list" id="artifacts"><li class="empty">산출물을 찾고 있습니다.</li></ul>
-        </article>
-      </section>
-
-      <section class="card panel timeline">
-        <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
-        <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
-      </section>
-
-      <section class="card panel changes">
-        <div class="panel-head"><div><div class="eyebrow">Append-only Activity</div><h2>스캔 사이의 변화</h2></div><span class="count" id="change-label">0 changes</span></div>
-        <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장됩니다.</li></ul>
-      </section>
-    </main>
+          <section class="card panel changes">
+            <div class="panel-head"><div><div class="eyebrow">Append-only Activity</div><h2>스캔 사이의 변화</h2></div><span class="count" id="change-label">0 changes</span></div>
+            <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장됩니다.</li></ul>
+          </section>
+        </div>
+      </main>
+    </div>
     <script>
       const element = (id) => document.getElementById(id);
       const kindLabels = { overview: '개요', planning: '기획', architecture: '설계', quality: '검증', release: '릴리스', document: '문서' };
@@ -180,6 +241,12 @@ export function renderDashboard(): string {
       const categoryLabels = { planning: '기획', design: '설계', implementation: '기능', issue: '문제 해결', quality: '검증', delivery: '릴리스', operations: '운영', documentation: '문서', change: '변경' };
       const changeLabels = { added: '추가', modified: '변경', deleted: '삭제' };
       const stageStateLabels = { ready: '자동 근거 준비', current: '현재 확인 단계', upcoming: '후속 단계' };
+      const views = {
+        overview: { title: '프로젝트 개요', description: '현재 Cycle과 프로젝트의 중요한 신호를 확인합니다.' },
+        process: { title: '단계와 Gate', description: 'P0–P4 단계별 준비 근거와 다음 행동을 확인합니다.' },
+        artifacts: { title: '프로젝트 산출물', description: '파일에서 자동으로 발견한 핵심 결과물을 확인합니다.' },
+        history: { title: '프로젝트 히스토리', description: '작업의 의미 흐름과 스캔 사이의 변화를 확인합니다.' },
+      };
 
       function text(tag, className, value) {
         const node = document.createElement(tag);
@@ -196,6 +263,24 @@ export function renderDashboard(): string {
           return;
         }
         items.forEach((item) => list.append(render(item)));
+      }
+
+      function activateView(scrollToTop = false) {
+        const requested = window.location.hash.slice(1);
+        const view = Object.hasOwn(views, requested) ? requested : 'overview';
+        if (view !== requested) window.history.replaceState(null, '', '#' + view);
+
+        document.querySelectorAll('[data-view-panel]').forEach((panel) => {
+          panel.hidden = panel.dataset.viewPanel !== view;
+        });
+        document.querySelectorAll('[data-view-link]').forEach((link) => {
+          if (link.dataset.viewLink === view) link.setAttribute('aria-current', 'page');
+          else link.removeAttribute('aria-current');
+        });
+        element('page-title').textContent = views[view].title;
+        element('page-description').textContent = views[view].description;
+        document.title = views[view].title + ' · Beacon';
+        if (scrollToTop) window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
       function renderSignal(signal) {
@@ -301,6 +386,7 @@ export function renderDashboard(): string {
           const activeCycle = journey.cycles.find((cycle) => cycle.status === 'active');
 
           element('name').textContent = identity.name;
+          element('sidebar-project-name').textContent = identity.name;
           element('root').textContent = identity.root;
           element('branch').textContent = identity.gitBranch ? 'Branch · ' + identity.gitBranch : 'Git 저장소 아님';
           element('head').textContent = identity.gitHead ? 'HEAD · ' + identity.gitHead : 'HEAD · —';
@@ -314,6 +400,7 @@ export function renderDashboard(): string {
             element('cycle-started').textContent = '시작 · ' + new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(activeCycle.startedAt));
             element('cycle-baseline').textContent = '시작 기준선 · Snapshot #' + activeCycle.baseline.snapshotId;
             element('cycle-artifacts').textContent = '시작 산출물 · ' + activeCycle.baseline.artifactPaths.length + '개';
+            element('sidebar-cycle').textContent = 'Cycle ' + String(activeCycle.sequence).padStart(2, '0') + ' · ' + activeCycle.name;
           } else {
             element('cycle-name').textContent = '아직 시작한 Cycle이 없습니다.';
             element('cycle-goal').textContent = 'beacon cycle start로 이번 여정의 이름과 목표를 기록하세요.';
@@ -321,6 +408,7 @@ export function renderDashboard(): string {
             element('cycle-started').textContent = '시작 시점 · —';
             element('cycle-baseline').textContent = '기준선 · —';
             element('cycle-artifacts').textContent = '시작 산출물 · —';
+            element('sidebar-cycle').textContent = '진행 중인 Cycle 없음';
           }
 
           element('score').textContent = snapshot.health.score + '%';
@@ -330,6 +418,10 @@ export function renderDashboard(): string {
           element('timeline-count').textContent = String(history.timelineCount);
           element('change-count').textContent = String(observation.git.changedFiles.length);
           element('health-card').className = 'card metric health-card ' + snapshot.health.status;
+          element('nav-overview-count').textContent = snapshot.health.score + '%';
+          element('nav-process-count').textContent = snapshot.process.currentStageId ? snapshot.process.currentStageId.toUpperCase() : 'Ready';
+          element('nav-artifact-count').textContent = String(projectArtifacts.length);
+          element('nav-history-count').textContent = String(history.timelineCount);
           renderProcess(snapshot.process);
 
           element('signal-count').textContent = snapshot.health.signals.length + ' signals';
@@ -337,7 +429,7 @@ export function renderDashboard(): string {
           element('timeline-label').textContent = history.timeline.length + (history.timeline.length < history.timelineCount ? ' / ' + history.timelineCount : '') + ' events';
           element('change-label').textContent = history.changes.length + (history.changes.length < history.changeCount ? ' / ' + history.changeCount : '') + ' changes';
           replaceList('signals', snapshot.health.signals, renderSignal, '현재 표시할 신호가 없습니다.');
-          replaceList('artifacts', projectArtifacts.slice(0, 8), renderArtifact, '발견한 핵심 문서 산출물이 없습니다.');
+          replaceList('artifacts', projectArtifacts, renderArtifact, '발견한 핵심 문서 산출물이 없습니다.');
           replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
           replaceList('changes', history.changes, renderChange, '첫 스캔을 기준선으로 저장했습니다. 다음 스캔부터 추가·변경·삭제를 기록합니다.');
           element('status').textContent = '연결됨';
@@ -351,6 +443,13 @@ export function renderDashboard(): string {
       }
 
       element('refresh').addEventListener('click', loadProject);
+      document.querySelectorAll('[data-view-link]').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (window.location.hash === link.getAttribute('href')) activateView(true);
+        });
+      });
+      window.addEventListener('hashchange', () => activateView(true));
+      activateView();
       loadProject();
     </script>
   </body>

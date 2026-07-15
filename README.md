@@ -21,7 +21,7 @@ pnpm exec beacon init
 pnpm exec beacon open
 ```
 
-브라우저에 로컬 Dashboard가 열립니다. 현재 폴더의 이름과 Git 상태, 발견한 문서, Beacon 신호, P0–P4 Gate 준비도, Timeline과 누적 변경 이력을 확인할 수 있습니다.
+브라우저에 로컬 Dashboard가 열립니다. `개요 · 단계 · 산출물 · 히스토리` 화면에서 현재 폴더의 이름과 Git 상태, 발견한 문서, Beacon 신호, P0–P4 Gate 준비도, Timeline과 누적 변경 이력을 확인할 수 있습니다.
 
 전역 명령으로 사용하려면 같은 릴리스 파일을 `pnpm add --global`로 설치할 수 있습니다.
 

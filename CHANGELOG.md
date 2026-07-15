@@ -8,10 +8,13 @@
 - Cycle 시작 시 Snapshot, Git HEAD와 핵심 산출물을 묶는 기준선
 - Dashboard의 현재 Cycle, 목표와 시작 기준선 표시
 - 로컬 Runtime의 `GET /api/journey`
+- 개요·단계·산출물·히스토리로 분리된 Dashboard 내비게이션
+- 새로고침 후에도 현재 화면을 유지하는 URL hash 라우팅
 
 ### Changed
 
 - `.beacon/` 내부 사용자 의도와 파생 파일이 프로젝트 Git 관찰을 오염하지 않도록 제외
+- Dashboard에서 핵심 산출물을 일부가 아닌 전체 표시
 
 ## 0.2.0 — 2026-07-15
 

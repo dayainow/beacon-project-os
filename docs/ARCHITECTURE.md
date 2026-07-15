@@ -19,6 +19,8 @@
 - `@beacon/cli`: `init`, `cycle`, `open`, `identity`, `export`의 사용자 진입점이다.
 - `@beacon/dashboard`: runtime이 제공한 관찰 결과만 표시한다.
 
+Dashboard는 별도 프론트엔드 라우터 의존성 없이 `#overview`, `#process`, `#artifacts`, `#history` hash를 사용한다. 네 화면은 동일한 API 응답을 공유하며 화면 이동만으로 재스캔하지 않는다. 넓은 화면에서는 고정된 왼쪽 내비게이션, 좁은 화면에서는 상단 가로 내비게이션을 사용한다.
+
 ## 데이터 소유권
 
 | 데이터 | 위치 | 성격 |
