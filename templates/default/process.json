@@ -1,0 +1,12 @@
+{
+  "id": "beacon-default-p0-p4-v1",
+  "name": "Beacon Default P0–P4",
+  "stages": [
+    { "id": "p0", "name": "기획" },
+    { "id": "p1", "name": "디자인" },
+    { "id": "p2", "name": "개발" },
+    { "id": "p3", "name": "검증" },
+    { "id": "p4", "name": "배포" }
+  ]
+}
+

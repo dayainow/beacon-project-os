@@ -1,0 +1,78 @@
+import { readProjectIdentity } from "@beacon/core";
+import { renderDashboard } from "@beacon/dashboard";
+import { createServer, type Server } from "node:http";
+
+export interface StartRuntimeOptions {
+  root: string;
+  port?: number;
+  host?: string;
+}
+
+export interface BeaconRuntime {
+  server: Server;
+  url: string;
+}
+
+function sendJson(response: import("node:http").ServerResponse, status: number, value: unknown): void {
+  response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
+  response.end(`${JSON.stringify(value)}\n`);
+}
+
+export async function startBeaconRuntime({
+  root,
+  port = 4300,
+  host = "127.0.0.1",
+}: StartRuntimeOptions): Promise<BeaconRuntime> {
+  await readProjectIdentity(root);
+
+  const server = createServer(async (request, response) => {
+    const requestUrl = new URL(request.url ?? "/", `http://${request.headers.host ?? host}`);
+
+    if (request.method !== "GET") {
+      sendJson(response, 405, { error: "method_not_allowed" });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/health") {
+      sendJson(response, 200, { status: "ok" });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/identity") {
+      try {
+        sendJson(response, 200, await readProjectIdentity(root));
+      } catch (error) {
+        sendJson(response, 500, {
+          error: "identity_unavailable",
+          message: error instanceof Error ? error.message : "unknown error",
+        });
+      }
+      return;
+    }
+
+    if (requestUrl.pathname === "/") {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end(renderDashboard());
+      return;
+    }
+
+    sendJson(response, 404, { error: "not_found" });
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, host, () => {
+      server.off("error", reject);
+      resolve();
+    });
+  });
+
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    server.close();
+    throw new Error("Beacon runtime 주소를 확인할 수 없습니다.");
+  }
+
+  return { server, url: `http://${host}:${address.port}` };
+}
+

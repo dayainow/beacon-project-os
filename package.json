@@ -1,0 +1,27 @@
+{
+  "name": "beacon-project-os",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local-first Project Navigation OS",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dayainow/beacon-project-os.git"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "verify": "pnpm build && pnpm lint && pnpm test"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "turbo": "2.10.4",
+    "typescript": "5.8.3"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.13"
+  }
+}
+

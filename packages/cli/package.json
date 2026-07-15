@@ -1,0 +1,20 @@
+{
+  "name": "@beacon/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "beacon": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test dist/*.test.js",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@beacon/core": "workspace:*",
+    "@beacon/runtime": "workspace:*"
+  }
+}
+
