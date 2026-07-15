@@ -62,6 +62,8 @@ const CONFIG_NAMES = new Set([
 ]);
 
 const MAX_FILES = 10_000;
+const MAX_GIT_COMMITS = 20;
+const MAX_TIMELINE_EVENTS = 30;
 
 export type ArtifactKind =
   | "overview"
@@ -97,6 +99,7 @@ export interface GitCommit {
   shortHash: string;
   authoredAt: string;
   subject: string;
+  paths: string[];
 }
 
 export interface GitObservation {
@@ -134,10 +137,42 @@ export interface ProjectHealth {
   signals: ProjectSignal[];
 }
 
+export type TimelineEventType = "artifact" | "commit";
+
+export type TimelineCategory =
+  | "planning"
+  | "design"
+  | "implementation"
+  | "issue"
+  | "quality"
+  | "delivery"
+  | "operations"
+  | "documentation"
+  | "change";
+
+export interface TimelineEvent {
+  id: string;
+  type: TimelineEventType;
+  category: TimelineCategory;
+  occurredAt: string;
+  title: string;
+  detail: string;
+  source: string;
+  reference: string;
+  relatedArtifacts: string[];
+}
+
+export interface ProjectTimeline {
+  events: TimelineEvent[];
+  total: number;
+  truncated: boolean;
+}
+
 export interface ProjectSnapshot {
   scannedAt: string;
   observation: ProjectObservation;
   health: ProjectHealth;
+  timeline: ProjectTimeline;
 }
 
 function toProjectPath(value: string): string {
@@ -259,8 +294,15 @@ function parseGitCommits(value: string | null): GitCommit[] {
     .map((record) => record.trim())
     .filter(Boolean)
     .map((record) => {
-      const [hash, shortHash, authoredAt, ...subject] = record.split("\u001f");
-      return { hash, shortHash, authoredAt, subject: subject.join("\u001f") };
+      const [header, ...pathLines] = record.split(/\r?\n/);
+      const [hash, shortHash, authoredAt, ...subject] = header.split("\u001f");
+      return {
+        hash,
+        shortHash,
+        authoredAt,
+        subject: subject.join("\u001f"),
+        paths: pathLines.map((filePath) => filePath.trim()).filter(Boolean),
+      };
     })
     .filter((commit) => Boolean(commit.hash && commit.shortHash && commit.authoredAt));
 }
@@ -291,9 +333,10 @@ function scanGit(root: string): GitObservation {
     recentCommits: parseGitCommits(git(root, [
       "log",
       "-n",
-      "8",
+      String(MAX_GIT_COMMITS),
       "--date=iso-strict",
-      "--pretty=format:%H%x1f%h%x1f%aI%x1f%s%x1e",
+      "--pretty=format:%x1e%H%x1f%h%x1f%aI%x1f%s",
+      "--name-only",
     ])),
   };
 }
@@ -449,6 +492,81 @@ export function evaluateProjectHealth(observation: ProjectObservation): ProjectH
   };
 }
 
+function artifactTimelineCategory(kind: ArtifactKind): TimelineCategory {
+  const categories: Record<ArtifactKind, TimelineCategory> = {
+    overview: "planning",
+    planning: "planning",
+    architecture: "design",
+    quality: "quality",
+    release: "delivery",
+    document: "documentation",
+  };
+  return categories[kind];
+}
+
+function commitTimelineCategory(subject: string): TimelineCategory {
+  const type = subject.match(/^([a-z]+)(?:\([^)]+\))?!?:/i)?.[1]?.toLowerCase();
+  if (type === "feat" || type === "refactor" || type === "perf") return "implementation";
+  if (type === "fix" || type === "revert") return "issue";
+  if (type === "test") return "quality";
+  if (type === "release") return "delivery";
+  if (type === "docs") return "documentation";
+  if (type === "build" || type === "ci" || type === "chore") return "operations";
+  if (type === "plan" || type === "product") return "planning";
+  if (type === "design" || type === "adr") return "design";
+  return "change";
+}
+
+export function buildProjectTimeline(observation: ProjectObservation): ProjectTimeline {
+  const changedPaths = new Set(observation.git.changedFiles.map((change) => change.path));
+  const workingArtifacts = observation.git.isRepository
+    ? observation.files.artifacts.filter((artifact) => changedPaths.has(artifact.path))
+    : observation.files.artifacts;
+
+  const artifactEvents: TimelineEvent[] = workingArtifacts.map((artifact) => ({
+    id: `artifact:${artifact.path}`,
+    type: "artifact",
+    category: artifactTimelineCategory(artifact.kind),
+    occurredAt: artifact.modifiedAt,
+    title: `${artifact.name} 작업 중`,
+    detail: observation.git.isRepository
+      ? "아직 commit되지 않은 문서 변경을 파일에서 발견했습니다."
+      : "Git 이력이 없어 파일의 현재 수정 시각을 기준으로 표시합니다.",
+    source: "filesystem",
+    reference: artifact.path,
+    relatedArtifacts: [artifact.path],
+  }));
+
+  const artifactPaths = new Set(observation.files.artifacts.map((artifact) => artifact.path));
+  const commitEvents: TimelineEvent[] = observation.git.recentCommits.map((commit) => {
+    const relatedArtifacts = commit.paths.filter((filePath) => artifactPaths.has(filePath));
+    return {
+      id: `commit:${commit.hash}`,
+      type: "commit",
+      category: commitTimelineCategory(commit.subject),
+      occurredAt: commit.authoredAt,
+      title: commit.subject,
+      detail: relatedArtifacts.length > 0
+        ? `Git commit에 문서 산출물 ${relatedArtifacts.length}개가 포함되어 있습니다.`
+        : `Git commit으로 기록된 변경 경로 ${commit.paths.length}개입니다.`,
+      source: "git",
+      reference: commit.shortHash,
+      relatedArtifacts,
+    };
+  });
+
+  const allEvents = [...artifactEvents, ...commitEvents].sort((left, right) => {
+    const timeDifference = Date.parse(right.occurredAt) - Date.parse(left.occurredAt);
+    return timeDifference || left.id.localeCompare(right.id);
+  });
+
+  return {
+    events: allEvents.slice(0, MAX_TIMELINE_EVENTS),
+    total: allEvents.length,
+    truncated: allEvents.length > MAX_TIMELINE_EVENTS,
+  };
+}
+
 export async function scanProject(root: string, now = new Date()): Promise<ProjectSnapshot> {
   const resolvedRoot = path.resolve(root);
   const [files, gitObservation] = await Promise.all([
@@ -461,5 +579,6 @@ export async function scanProject(root: string, now = new Date()): Promise<Proje
     scannedAt: now.toISOString(),
     observation,
     health: evaluateProjectHealth(observation),
+    timeline: buildProjectTimeline(observation),
   };
 }

@@ -36,7 +36,8 @@ Dashboard는 별도 Operations DB나 Project ID 입력을 요구하지 않는다
 filesystem + git
   → scanProject(root)
   → ProjectObservation
-  → evaluateProjectHealth(observation)
+  ├─ evaluateProjectHealth(observation)
+  └─ buildProjectTimeline(observation)
   → GET /api/snapshot
   → Dashboard
 ```
@@ -45,4 +46,6 @@ filesystem + git
 
 Project Health는 소개, 기획, 설계, Git 저장소와 commit 이력의 다섯 기준을 점검한다. 점수만 표시하지 않고 각 신호에 근거, 출처와 다음 행동을 포함한다. 미커밋 변경은 실패가 아니라 검토가 필요한 진행 상태로 취급한다.
 
-`init`은 버전 있는 설정을 만들고, `open`은 loopback runtime을 시작한다. Dashboard는 `GET /api/identity`와 `GET /api/snapshot`만 사용하므로 Operations DB나 별도 Project ID가 필요 없다. Timeline과 SQLite는 이 경계를 유지한 채 이후 세로 흐름으로 추가한다.
+Project Timeline은 최근 Git commit 최대 20개의 변경 경로와 아직 commit되지 않은 문서 변경을 결합한다. 깨끗한 Git 문서는 파일 수정 시각으로 중복 표시하지 않고 해당 문서를 변경한 최근 commit에 연결한다. Git이 없는 프로젝트에서만 파일 수정 시각을 대체 근거로 사용한다. 문서는 종류를, commit은 Conventional Commit type을 사용해 의미 범주를 부여한다. 원본에 없는 의미를 AI로 추측하지 않으며 분류할 수 없는 변경은 `change`로 유지한다. 최신 30개 이벤트를 반환하고 `total`과 `truncated`로 관찰 범위를 설명한다.
+
+`init`은 버전 있는 설정을 만들고, `open`은 loopback runtime을 시작한다. Dashboard는 `GET /api/identity`와 `GET /api/snapshot`만 사용하므로 Operations DB나 별도 Project ID가 필요 없다. SQLite와 Project Book export는 이 경계를 유지한 채 이후 세로 흐름으로 추가한다.

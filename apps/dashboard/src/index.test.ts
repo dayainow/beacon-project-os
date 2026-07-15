@@ -10,6 +10,6 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.ok(script, "dashboard script should exist");
   assert.doesNotThrow(() => new Script(script));
   assert.match(dashboard, /\/api\/snapshot/);
+  assert.match(dashboard, /Project Timeline/);
   assert.doesNotMatch(script, /innerHTML|insertAdjacentHTML|document\.write/);
 });
-

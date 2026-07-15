@@ -42,7 +42,7 @@ export function renderDashboard(): string {
       .list-item { padding: 18px 24px; border-bottom: 1px solid #eeeef1; }
       .list-item:last-child { border-bottom: 0; }
       .signal-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-      .signal-title, .artifact-name, .commit-subject { margin: 0; font-weight: 800; line-height: 1.4; }
+      .signal-title, .artifact-name, .timeline-title { margin: 0; font-weight: 800; line-height: 1.4; }
       .badge { border-radius: 999px; padding: 5px 8px; font-size: 10px; font-weight: 850; white-space: nowrap; }
       .badge.warning { background: #fff0f1; color: #bd2736; }
       .badge.attention { background: #fff7df; color: #9a6200; }
@@ -50,11 +50,13 @@ export function renderDashboard(): string {
       .signal-detail { margin: 7px 0 0; color: #666a73; font-size: 13px; line-height: 1.55; }
       .next-action { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
       .source { margin-top: 9px; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
-      .artifact-row, .commit-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+      .artifact-row, .timeline-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
       .artifact-kind { color: #5b43ff; font-size: 10px; font-weight: 800; text-transform: uppercase; }
       .artifact-path { margin-top: 5px; color: #858892; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
-      .commit-meta { color: #8a8d95; font-size: 11px; white-space: nowrap; }
-      .history { margin-top: 12px; }
+      .timeline-side { display: grid; justify-items: end; gap: 7px; }
+      .timeline-category { border-radius: 999px; padding: 5px 8px; background: #f2efff; color: #5b43ff; font-size: 10px; font-weight: 850; white-space: nowrap; }
+      .timeline-meta { color: #8a8d95; font-size: 11px; white-space: nowrap; }
+      .timeline { margin-top: 12px; }
       .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
       .error { padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
       @media (max-width: 860px) { .metrics { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
@@ -85,7 +87,7 @@ export function renderDashboard(): string {
       <section class="metrics" aria-label="프로젝트 관찰 요약">
         <article class="card metric health-card" id="health-card"><div class="eyebrow">Project Health</div><strong class="metric-value" id="score">—</strong><span class="metric-note" id="headline">기준 확인 중</span></article>
         <article class="card metric"><div class="eyebrow">발견한 산출물</div><strong class="metric-value" id="artifact-count">—</strong><span class="metric-note">파일 경로에서 자동 발견</span></article>
-        <article class="card metric"><div class="eyebrow">최근 변경</div><strong class="metric-value" id="commit-count">—</strong><span class="metric-note">최근 Git commit</span></article>
+        <article class="card metric"><div class="eyebrow">Timeline</div><strong class="metric-value" id="timeline-count">—</strong><span class="metric-note">문서와 Git의 의미 단위 이벤트</span></article>
         <article class="card metric"><div class="eyebrow">작업 중 변경</div><strong class="metric-value" id="change-count">—</strong><span class="metric-note">아직 commit되지 않은 경로</span></article>
       </section>
 
@@ -103,15 +105,16 @@ export function renderDashboard(): string {
         </article>
       </section>
 
-      <section class="card panel history">
-        <div class="panel-head"><div><div class="eyebrow">Recent History</div><h2>최근 변경</h2></div><span class="count" id="history-label">0 commits</span></div>
-        <ul class="list" id="history"><li class="empty">Git 이력을 확인하고 있습니다.</li></ul>
+      <section class="card panel timeline">
+        <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
+        <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
       </section>
     </main>
     <script>
       const element = (id) => document.getElementById(id);
       const kindLabels = { overview: '개요', planning: '기획', architecture: '설계', quality: '검증', release: '릴리스', document: '문서' };
       const levelLabels = { warning: '보완 필요', attention: '확인 필요', ready: '준비됨' };
+      const categoryLabels = { planning: '기획', design: '설계', implementation: '기능', issue: '문제 해결', quality: '검증', delivery: '릴리스', operations: '운영', documentation: '문서', change: '변경' };
 
       function text(tag, className, value) {
         const node = document.createElement(tag);
@@ -150,13 +153,17 @@ export function renderDashboard(): string {
         return item;
       }
 
-      function renderCommit(commit) {
+      function renderTimelineEvent(event) {
         const item = text('li', 'list-item', '');
-        const row = text('div', 'commit-row', '');
+        const row = text('div', 'timeline-row', '');
         const content = text('div', '', '');
-        content.append(text('p', 'commit-subject', commit.subject), text('div', 'source', 'git:' + commit.shortHash));
-        const date = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric' }).format(new Date(commit.authoredAt));
-        row.append(content, text('span', 'commit-meta', date));
+        content.append(text('p', 'timeline-title', event.title), text('p', 'signal-detail', event.detail));
+        if (event.relatedArtifacts.length) content.append(text('div', 'artifact-path', '산출물 · ' + event.relatedArtifacts.join(', ')));
+        content.append(text('div', 'source', '출처 · ' + event.source + ':' + event.reference));
+        const side = text('div', 'timeline-side', '');
+        const date = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(event.occurredAt));
+        side.append(text('span', 'timeline-category', categoryLabels[event.category] || '변경'), text('span', 'timeline-meta', date));
+        row.append(content, side);
         item.append(row);
         return item;
       }
@@ -186,16 +193,16 @@ export function renderDashboard(): string {
           element('score').textContent = snapshot.health.score + '%';
           element('headline').textContent = snapshot.health.headline;
           element('artifact-count').textContent = String(observation.files.artifacts.length);
-          element('commit-count').textContent = String(observation.git.recentCommits.length);
+          element('timeline-count').textContent = String(snapshot.timeline.events.length);
           element('change-count').textContent = String(observation.git.changedFiles.length);
           element('health-card').className = 'card metric health-card ' + snapshot.health.status;
 
           element('signal-count').textContent = snapshot.health.signals.length + ' signals';
           element('artifact-label').textContent = observation.files.artifacts.length + ' files';
-          element('history-label').textContent = observation.git.recentCommits.length + ' commits';
+          element('timeline-label').textContent = snapshot.timeline.events.length + (snapshot.timeline.truncated ? ' / ' + snapshot.timeline.total : '') + ' events';
           replaceList('signals', snapshot.health.signals, renderSignal, '현재 표시할 신호가 없습니다.');
           replaceList('artifacts', observation.files.artifacts.slice(0, 8), renderArtifact, '발견한 문서 산출물이 없습니다.');
-          replaceList('history', observation.git.recentCommits, renderCommit, '아직 표시할 Git commit이 없습니다.');
+          replaceList('timeline', snapshot.timeline.events, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
           element('status').textContent = '연결됨';
         } catch {
           element('status').textContent = '확인 필요';
@@ -212,4 +219,3 @@ export function renderDashboard(): string {
   </body>
 </html>`;
 }
-

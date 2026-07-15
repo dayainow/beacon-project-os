@@ -99,6 +99,18 @@ test("beacon init → beacon open → project identity", async (context) => {
     health: {
       signals: Array<{ id: string; level: string; evidence: string[]; sources: string[]; nextAction: string }>;
     };
+    timeline: {
+      events: Array<{
+        type: string;
+        category: string;
+        title: string;
+        reference: string;
+        occurredAt: string;
+        relatedArtifacts: string[];
+      }>;
+      total: number;
+      truncated: boolean;
+    };
   };
   assert.ok(snapshot.observation.files.artifacts.some((artifact) => artifact.path === "README.md"));
   assert.ok(snapshot.observation.files.artifacts.some((artifact) => artifact.path === "docs/PRODUCT.md"));
@@ -109,11 +121,24 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.ok(architectureSignal?.evidence.length);
   assert.ok(architectureSignal?.sources.length);
   assert.ok(architectureSignal?.nextAction.length);
+  assert.ok(snapshot.timeline.events.some((event) => event.type === "artifact" && event.reference === "README.md"));
+  const baselineEvent = snapshot.timeline.events.find((event) => (
+    event.type === "commit"
+    && event.category === "documentation"
+    && event.title === "docs: establish project baseline"
+  ));
+  assert.ok(baselineEvent);
+  assert.ok(baselineEvent.relatedArtifacts.includes("README.md"));
+  assert.ok(baselineEvent.relatedArtifacts.includes("docs/PRODUCT.md"));
+  assert.ok(snapshot.timeline.events.every((event, index, events) => (
+    index === 0 || Date.parse(events[index - 1].occurredAt) >= Date.parse(event.occurredAt)
+  )));
 
   const dashboardResponse = await fetch(url);
   assert.equal(dashboardResponse.status, 200);
   const dashboard = await dashboardResponse.text();
   assert.match(dashboard, /Project Identity/);
   assert.match(dashboard, /Beacon Signals/);
+  assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /\/api\/snapshot/);
 });
