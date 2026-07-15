@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, unlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -111,6 +111,12 @@ test("beacon init → beacon open → project identity", async (context) => {
       total: number;
       truncated: boolean;
     };
+    persistence: {
+      recorded: boolean;
+      baseline: boolean;
+      snapshotCount: number;
+      changeCount: number;
+    };
   };
   assert.ok(snapshot.observation.files.artifacts.some((artifact) => artifact.path === "README.md"));
   assert.ok(snapshot.observation.files.artifacts.some((artifact) => artifact.path === "docs/PRODUCT.md"));
@@ -133,6 +139,56 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.ok(snapshot.timeline.events.every((event, index, events) => (
     index === 0 || Date.parse(events[index - 1].occurredAt) >= Date.parse(event.occurredAt)
   )));
+  assert.equal(snapshot.persistence.recorded, true);
+  assert.equal(snapshot.persistence.baseline, true);
+  assert.equal(snapshot.persistence.snapshotCount, 1);
+
+  const unchangedResponse = await fetch(`${url}/api/snapshot`);
+  const unchanged = await unchangedResponse.json() as { persistence: { recorded: boolean; snapshotCount: number } };
+  assert.equal(unchanged.persistence.recorded, false);
+  assert.equal(unchanged.persistence.snapshotCount, 1);
+
+  await writeFile(path.join(root, "README.md"), "# Observed Project\n\nReady for review.\n", "utf8");
+  await utimes(path.join(root, "README.md"), new Date("2026-07-15T12:00:00.000Z"), new Date("2026-07-15T12:00:00.000Z"));
+  await unlink(path.join(root, "docs", "PRODUCT.md"));
+  await writeFile(path.join(root, "docs", "ARCHITECTURE.md"), "# Architecture\n", "utf8");
+  await utimes(path.join(root, "docs", "ARCHITECTURE.md"), new Date("2026-07-15T12:01:00.000Z"), new Date("2026-07-15T12:01:00.000Z"));
+
+  const changedResponse = await fetch(`${url}/api/snapshot`);
+  const changed = await changedResponse.json() as {
+    persistence: {
+      recorded: boolean;
+      baseline: boolean;
+      snapshotCount: number;
+      changes: Array<{ kind: string; entity: string; reference: string }>;
+    };
+  };
+  assert.equal(changed.persistence.recorded, true);
+  assert.equal(changed.persistence.baseline, false);
+  assert.equal(changed.persistence.snapshotCount, 2);
+  assert.deepEqual(
+    changed.persistence.changes
+      .filter((change) => change.entity === "artifact")
+      .map(({ kind, reference }) => ({ kind, reference })),
+    [
+      { kind: "added", reference: "docs/ARCHITECTURE.md" },
+      { kind: "deleted", reference: "docs/PRODUCT.md" },
+      { kind: "modified", reference: "README.md" },
+    ],
+  );
+
+  const historyResponse = await fetch(`${url}/api/history`);
+  assert.equal(historyResponse.status, 200);
+  const history = await historyResponse.json() as {
+    snapshotCount: number;
+    changeCount: number;
+    timelineCount: number;
+    changes: Array<{ kind: string }>;
+  };
+  assert.equal(history.snapshotCount, 2);
+  assert.equal(history.changeCount, 3);
+  assert.equal(history.changes.length, 3);
+  assert.ok(history.timelineCount >= 3);
 
   const dashboardResponse = await fetch(url);
   assert.equal(dashboardResponse.status, 200);
@@ -140,5 +196,7 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.match(dashboard, /Project Identity/);
   assert.match(dashboard, /Beacon Signals/);
   assert.match(dashboard, /Project Timeline/);
+  assert.match(dashboard, /Append-only Activity/);
   assert.match(dashboard, /\/api\/snapshot/);
+  assert.match(dashboard, /\/api\/history/);
 });

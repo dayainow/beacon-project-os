@@ -1,6 +1,7 @@
 import { readProjectIdentity, scanProject } from "@beacon/core";
 import { renderDashboard } from "@beacon/dashboard";
 import { createServer, type Server } from "node:http";
+import { ProjectHistoryStore } from "./historyStore.js";
 
 export interface StartRuntimeOptions {
   root: string;
@@ -27,6 +28,7 @@ export async function startBeaconRuntime({
   host = "127.0.0.1",
 }: StartRuntimeOptions): Promise<BeaconRuntime> {
   await readProjectIdentity(root);
+  const historyStore = new ProjectHistoryStore(root);
 
   const server = createServer(async (request, response) => {
     const requestUrl = new URL(request.url ?? "/", `http://${request.headers.host ?? host}`);
@@ -55,10 +57,27 @@ export async function startBeaconRuntime({
 
     if (requestUrl.pathname === "/api/snapshot") {
       try {
-        sendJson(response, 200, await scanProject(root));
+        const snapshot = await scanProject(root);
+        sendJson(response, 200, {
+          ...snapshot,
+          persistence: historyStore.record(snapshot),
+        });
       } catch (error) {
         sendJson(response, 500, {
           error: "snapshot_unavailable",
+          message: error instanceof Error ? error.message : "unknown error",
+        });
+      }
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/history") {
+      try {
+        const requestedLimit = Number(requestUrl.searchParams.get("limit") ?? 100);
+        sendJson(response, 200, historyStore.history(requestedLimit));
+      } catch (error) {
+        sendJson(response, 500, {
+          error: "history_unavailable",
           message: error instanceof Error ? error.message : "unknown error",
         });
       }
@@ -73,14 +92,20 @@ export async function startBeaconRuntime({
 
     sendJson(response, 404, { error: "not_found" });
   });
+  server.once("close", () => historyStore.close());
 
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(port, host, () => {
-      server.off("error", reject);
-      resolve();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(port, host, () => {
+        server.off("error", reject);
+        resolve();
+      });
     });
-  });
+  } catch (error) {
+    historyStore.close();
+    throw error;
+  }
 
   const address = server.address();
   if (!address || typeof address === "string") {

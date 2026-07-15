@@ -47,6 +47,9 @@ export function renderDashboard(): string {
       .badge.warning { background: #fff0f1; color: #bd2736; }
       .badge.attention { background: #fff7df; color: #9a6200; }
       .badge.ready { background: #eaf9f2; color: #08764d; }
+      .badge.added { background: #eaf9f2; color: #08764d; }
+      .badge.modified { background: #fff7df; color: #9a6200; }
+      .badge.deleted { background: #fff0f1; color: #bd2736; }
       .signal-detail { margin: 7px 0 0; color: #666a73; font-size: 13px; line-height: 1.55; }
       .next-action { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
       .source { margin-top: 9px; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
@@ -57,6 +60,7 @@ export function renderDashboard(): string {
       .timeline-category { border-radius: 999px; padding: 5px 8px; background: #f2efff; color: #5b43ff; font-size: 10px; font-weight: 850; white-space: nowrap; }
       .timeline-meta { color: #8a8d95; font-size: 11px; white-space: nowrap; }
       .timeline { margin-top: 12px; }
+      .changes { margin-top: 12px; }
       .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
       .error { padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
       @media (max-width: 860px) { .metrics { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
@@ -81,6 +85,7 @@ export function renderDashboard(): string {
           <span class="chip" id="branch">Git 확인 중</span>
           <span class="chip" id="head">HEAD —</span>
           <span class="chip" id="scanned">스캔 대기</span>
+          <span class="chip" id="history-count">기록 확인 중</span>
         </div>
       </section>
 
@@ -109,12 +114,18 @@ export function renderDashboard(): string {
         <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
         <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
       </section>
+
+      <section class="card panel changes">
+        <div class="panel-head"><div><div class="eyebrow">Append-only Activity</div><h2>스캔 사이의 변화</h2></div><span class="count" id="change-label">0 changes</span></div>
+        <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장됩니다.</li></ul>
+      </section>
     </main>
     <script>
       const element = (id) => document.getElementById(id);
       const kindLabels = { overview: '개요', planning: '기획', architecture: '설계', quality: '검증', release: '릴리스', document: '문서' };
       const levelLabels = { warning: '보완 필요', attention: '확인 필요', ready: '준비됨' };
       const categoryLabels = { planning: '기획', design: '설계', implementation: '기능', issue: '문제 해결', quality: '검증', delivery: '릴리스', operations: '운영', documentation: '문서', change: '변경' };
+      const changeLabels = { added: '추가', modified: '변경', deleted: '삭제' };
 
       function text(tag, className, value) {
         const node = document.createElement(tag);
@@ -168,6 +179,16 @@ export function renderDashboard(): string {
         return item;
       }
 
+      function renderChange(change) {
+        const item = text('li', 'list-item', '');
+        const top = text('div', 'signal-top', '');
+        top.append(text('p', 'signal-title', change.title), text('span', 'badge ' + change.kind, changeLabels[change.kind]));
+        item.append(top, text('p', 'signal-detail', change.detail));
+        const date = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(change.detectedAt));
+        item.append(text('div', 'source', '출처 · ' + change.source + ':' + change.reference + ' · ' + date));
+        return item;
+      }
+
       async function loadProject() {
         element('refresh').disabled = true;
         element('status').textContent = '스캔 중';
@@ -182,6 +203,9 @@ export function renderDashboard(): string {
 
           const identity = await responses[0].json();
           const snapshot = await responses[1].json();
+          const historyResponse = await fetch('/api/history?limit=100', { cache: 'no-store' });
+          if (!historyResponse.ok) throw new Error('history request failed');
+          const history = await historyResponse.json();
           const observation = snapshot.observation;
 
           element('name').textContent = identity.name;
@@ -189,20 +213,23 @@ export function renderDashboard(): string {
           element('branch').textContent = identity.gitBranch ? 'Branch · ' + identity.gitBranch : 'Git 저장소 아님';
           element('head').textContent = identity.gitHead ? 'HEAD · ' + identity.gitHead : 'HEAD · —';
           element('scanned').textContent = '스캔 · ' + new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date(snapshot.scannedAt));
+          element('history-count').textContent = '기준선 · ' + history.snapshotCount + '회';
 
           element('score').textContent = snapshot.health.score + '%';
           element('headline').textContent = snapshot.health.headline;
           element('artifact-count').textContent = String(observation.files.artifacts.length);
-          element('timeline-count').textContent = String(snapshot.timeline.events.length);
+          element('timeline-count').textContent = String(history.timelineCount);
           element('change-count').textContent = String(observation.git.changedFiles.length);
           element('health-card').className = 'card metric health-card ' + snapshot.health.status;
 
           element('signal-count').textContent = snapshot.health.signals.length + ' signals';
           element('artifact-label').textContent = observation.files.artifacts.length + ' files';
-          element('timeline-label').textContent = snapshot.timeline.events.length + (snapshot.timeline.truncated ? ' / ' + snapshot.timeline.total : '') + ' events';
+          element('timeline-label').textContent = history.timeline.length + (history.timeline.length < history.timelineCount ? ' / ' + history.timelineCount : '') + ' events';
+          element('change-label').textContent = history.changes.length + (history.changes.length < history.changeCount ? ' / ' + history.changeCount : '') + ' changes';
           replaceList('signals', snapshot.health.signals, renderSignal, '현재 표시할 신호가 없습니다.');
           replaceList('artifacts', observation.files.artifacts.slice(0, 8), renderArtifact, '발견한 문서 산출물이 없습니다.');
-          replaceList('timeline', snapshot.timeline.events, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
+          replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
+          replaceList('changes', history.changes, renderChange, '첫 스캔을 기준선으로 저장했습니다. 다음 스캔부터 추가·변경·삭제를 기록합니다.');
           element('status').textContent = '연결됨';
         } catch {
           element('status').textContent = '확인 필요';

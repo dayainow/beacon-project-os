@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export * from "./scanner.js";
+export * from "./history.js";
 
 export const BEACON_DIRECTORY = ".beacon";
 export const CONFIG_VERSION = 1;
@@ -83,7 +84,7 @@ export async function initializeProject(
 
   await mkdir(directory, { recursive: true });
   await writeFile(configPath(resolvedRoot), `${JSON.stringify(config, null, 2)}\n`, "utf8");
-  await writeFile(path.join(directory, ".gitignore"), "cache/\nbeacon.db\n*.log\n", "utf8");
+  await writeFile(path.join(directory, ".gitignore"), "cache/\nbeacon.db*\n*.log\n", "utf8");
 
   return { config, created: true, configPath: configPath(resolvedRoot) };
 }
