@@ -37,6 +37,17 @@ export function renderDashboard(): string {
       .refresh { border: 1px solid #d8d9dd; background: #fff; border-radius: 10px; padding: 9px 13px; color: #34373d; cursor: pointer; font-weight: 700; }
       .refresh:hover { border-color: #9d91ff; }
       .refresh:disabled { cursor: wait; opacity: .55; }
+      .auto-scan { display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid #d8d9dd; border-radius: 10px; background: #fff; color: #555962; font-size: 12px; font-weight: 700; cursor: pointer; }
+      .auto-scan input { accent-color: #5b43ff; cursor: pointer; }
+      .history-tabs { display: flex; gap: 6px; margin-bottom: 4px; }
+      .history-tab { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border: 1px solid #dedfe3; border-radius: 999px; background: #fff; color: #555962; font-size: 13px; font-weight: 800; cursor: pointer; }
+      .history-tab:hover { border-color: #9d91ff; }
+      .history-tab[aria-selected="true"] { border-color: #d9d2ff; background: #f4f1ff; color: #3f2ec4; box-shadow: 0 6px 18px rgb(63 46 196 / 8%); }
+      .tab-count { min-width: 20px; padding: 2px 6px; border-radius: 999px; background: #ececf0; color: #6c707a; font-size: 10px; font-weight: 800; text-align: center; }
+      .history-tab[aria-selected="true"] .tab-count { background: #ded7ff; color: #4935d0; }
+      .history-panel { display: grid; gap: 12px; }
+      .history-panel[hidden] { display: none; }
+      .panel-hint { margin: 0; padding: 0 24px 4px; color: #8a8d95; font-size: 12px; line-height: 1.5; }
       .card { background: #fff; border: 1px solid #dedfe3; border-radius: 18px; box-shadow: 0 10px 30px rgb(23 25 29 / 5%); }
       .identity { padding: 26px; }
       .eyebrow { color: #777b85; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
@@ -164,6 +175,7 @@ export function renderDashboard(): string {
           </div>
           <div class="header-actions">
             <div class="status" id="status">프로젝트 확인 중</div>
+            <label class="auto-scan" for="auto-scan"><input type="checkbox" id="auto-scan" />자동 스캔</label>
             <button class="refresh" id="refresh" type="button">다시 스캔</button>
           </div>
         </header>
@@ -233,25 +245,41 @@ export function renderDashboard(): string {
         </div>
 
         <div class="view" id="view-history" data-view-panel="history" hidden>
-          <section class="card panel cycles">
-            <div class="panel-head"><div><div class="eyebrow">Project Journey</div><h2>Cycle 로그</h2></div><span class="count" id="cycle-log-label">0 cycles</span></div>
-            <ul class="list" id="cycle-log"><li class="empty">아직 시작한 Cycle이 없습니다.</li></ul>
-          </section>
+          <div class="history-tabs" role="tablist" aria-label="히스토리 보기">
+            <button class="history-tab" type="button" data-history-tab="daily" aria-selected="true">일자별<span class="tab-count" id="tab-daily-count">—</span></button>
+            <button class="history-tab" type="button" data-history-tab="cycle" aria-selected="false">Cycle<span class="tab-count" id="tab-cycle-count">—</span></button>
+            <button class="history-tab" type="button" data-history-tab="detail" aria-selected="false">상세<span class="tab-count" id="tab-detail-count">—</span></button>
+          </div>
 
-          <section class="card panel daily">
-            <div class="panel-head"><div><div class="eyebrow">Daily Activity</div><h2>일자별 작업</h2></div><span class="count" id="daily-label">0 days</span></div>
-            <ul class="list" id="daily"><li class="empty">날짜별로 묶을 작업 이벤트가 아직 없습니다.</li></ul>
-          </section>
+          <div class="history-panel" data-history-panel="daily">
+            <section class="card panel daily">
+              <div class="panel-head"><div><div class="eyebrow">Daily Activity</div><h2>일자별 작업</h2></div><span class="count" id="daily-label">0 days</span></div>
+              <p class="panel-hint">하루 단위로 무엇을, 몇 건 했는지 묶어 보여줍니다.</p>
+              <ul class="list" id="daily"><li class="empty">날짜별로 묶을 작업 이벤트가 아직 없습니다.</li></ul>
+            </section>
+          </div>
 
-          <section class="card panel timeline">
-            <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
-            <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
-          </section>
+          <div class="history-panel" data-history-panel="cycle" hidden>
+            <section class="card panel cycles">
+              <div class="panel-head"><div><div class="eyebrow">Project Journey</div><h2>Cycle 로그</h2></div><span class="count" id="cycle-log-label">0 cycles</span></div>
+              <p class="panel-hint">프로젝트를 차수(Cycle)로 끊어, 각 차수에서 무엇을 이뤘는지 보여줍니다.</p>
+              <ul class="list" id="cycle-log"><li class="empty">아직 시작한 Cycle이 없습니다.</li></ul>
+            </section>
+          </div>
 
-          <section class="card panel changes">
-            <div class="panel-head"><div><div class="eyebrow">Append-only Activity</div><h2>스캔 사이의 변화</h2></div><span class="count" id="change-label">0 changes</span></div>
-            <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장됩니다.</li></ul>
-          </section>
+          <div class="history-panel" data-history-panel="detail" hidden>
+            <section class="card panel timeline">
+              <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
+              <p class="panel-hint">commit과 문서 변경을 하나씩 시간순으로 나열합니다.</p>
+              <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
+            </section>
+
+            <section class="card panel changes">
+              <div class="panel-head"><div><div class="eyebrow">Append-only Activity</div><h2>스캔 사이의 변화</h2></div><span class="count" id="change-label">0 changes</span></div>
+              <p class="panel-hint">직전 스캔과 비교해 새로 생기거나 바뀐 항목을 보여줍니다.</p>
+              <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장됩니다.</li></ul>
+            </section>
+          </div>
         </div>
       </main>
     </div>
@@ -302,6 +330,15 @@ export function renderDashboard(): string {
         element('page-description').textContent = views[view].description;
         document.title = views[view].title + ' · Beacon';
         if (scrollToTop) window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function activateHistoryTab(tab) {
+        document.querySelectorAll('[data-history-panel]').forEach((panel) => {
+          panel.hidden = panel.dataset.historyPanel !== tab;
+        });
+        document.querySelectorAll('[data-history-tab]').forEach((button) => {
+          button.setAttribute('aria-selected', button.dataset.historyTab === tab ? 'true' : 'false');
+        });
       }
 
       function renderSignal(signal) {
@@ -520,10 +557,13 @@ export function renderDashboard(): string {
           replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
           const days = groupByDay(history.timeline);
           element('daily-label').textContent = days.length + ' days';
+          element('tab-daily-count').textContent = String(days.length);
           replaceList('daily', days, renderDay, '날짜별로 묶을 작업 이벤트가 아직 없습니다.');
           replaceList('changes', history.changes, renderChange, '첫 스캔을 기준선으로 저장했습니다. 다음 스캔부터 추가·변경·삭제를 기록합니다.');
+          element('tab-detail-count').textContent = String(history.timeline.length);
           const orderedCycles = [...journey.cycles].sort((left, right) => right.sequence - left.sequence);
           element('cycle-log-label').textContent = orderedCycles.length + ' cycles';
+          element('tab-cycle-count').textContent = String(orderedCycles.length);
           replaceList('cycle-log', orderedCycles, renderCycle, 'beacon cycle start로 첫 Cycle을 시작하면 여기에 시작–완성 로그가 쌓입니다.');
           element('status').textContent = '연결됨';
         } catch {
@@ -541,8 +581,25 @@ export function renderDashboard(): string {
           if (window.location.hash === link.getAttribute('href')) activateView(true);
         });
       });
+      document.querySelectorAll('[data-history-tab]').forEach((button) => {
+        button.addEventListener('click', () => activateHistoryTab(button.dataset.historyTab));
+      });
       window.addEventListener('hashchange', () => activateView(true));
+
+      // 자동 스캔: 켜면 일정 간격으로 다시 스캔해 진행 중 변화를 자동으로 쌓는다.
+      const AUTO_SCAN_INTERVAL_MS = 15000;
+      let autoScanTimer = null;
+      element('auto-scan').addEventListener('change', (event) => {
+        if (event.target.checked) {
+          autoScanTimer = setInterval(() => { if (!document.hidden) loadProject(); }, AUTO_SCAN_INTERVAL_MS);
+        } else if (autoScanTimer) {
+          clearInterval(autoScanTimer);
+          autoScanTimer = null;
+        }
+      });
+
       activateView();
+      activateHistoryTab('daily');
       loadProject();
     </script>
   </body>
