@@ -109,6 +109,20 @@ export function renderDashboard(): string {
       .badge.deleted { background: #fff0f1; color: #bd2736; }
       .signal-detail { margin: 7px 0 0; color: #666a73; font-size: 13px; line-height: 1.55; }
       .next-action { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
+      .signal-summary { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 24px; border-bottom: 1px solid #ececef; }
+      .summary-pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+      .summary-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+      .summary-pill.warning { background: #fff0f1; color: #bd2736; } .summary-pill.warning .dot { background: #df4b57; }
+      .summary-pill.attention { background: #fff7df; color: #9a6200; } .summary-pill.attention .dot { background: #f0a100; }
+      .summary-pill.ready { background: #eaf9f2; color: #08764d; } .summary-pill.ready .dot { background: #13a76f; }
+      .group-label { padding: 16px 24px 4px; color: #8a8d95; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+      .list-item.attend { border-left: 3px solid #f0a100; }
+      .list-item.attend.is-warning { border-left-color: #df4b57; }
+      .signal-ready { display: flex; align-items: center; gap: 11px; padding: 13px 24px; border-bottom: 1px solid #f2f2f5; }
+      .signal-ready:last-child { border-bottom: 0; }
+      .signal-ready .dot { width: 9px; height: 9px; border-radius: 50%; background: #13a76f; flex: none; }
+      .signal-ready-title { margin: 0; font-size: 13px; font-weight: 700; color: #34373d; }
+      .signal-ready-source { margin-left: auto; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; text-align: right; }
       .source { margin-top: 9px; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
       .artifact-row, .timeline-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
       .artifact-kind { color: #5b43ff; font-size: 10px; font-weight: 800; text-transform: uppercase; }
@@ -126,6 +140,17 @@ export function renderDashboard(): string {
       .day-date { margin: 0; font-size: 15px; font-weight: 850; letter-spacing: -.02em; }
       .day-total { color: #5b43ff; font-size: 12px; font-weight: 800; white-space: nowrap; }
       .day-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+      .day-events { margin-top: 14px; }
+      .day-events > summary { list-style: none; cursor: pointer; color: #5b43ff; font-size: 12px; font-weight: 800; user-select: none; }
+      .day-events > summary::-webkit-details-marker { display: none; }
+      .day-events > summary::before { content: '▸ '; }
+      .day-events[open] > summary::before { content: '▾ '; }
+      .day-event { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 11px 0; border-top: 1px solid #eeeef1; }
+      .day-event:first-of-type { margin-top: 10px; }
+      .day-event-title { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.4; }
+      .day-event-source { margin-top: 4px; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+      .day-event-side { display: grid; justify-items: end; gap: 6px; white-space: nowrap; }
+      .day-event-time { color: #8a8d95; font-size: 11px; }
       .day-category { border-radius: 999px; padding: 4px 9px; background: #f2efff; color: #5b43ff; font-size: 11px; font-weight: 800; white-space: nowrap; }
       .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
       .error { margin-bottom: 12px; padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
@@ -220,7 +245,11 @@ export function renderDashboard(): string {
 
           <section class="card panel">
             <div class="panel-head"><div><div class="eyebrow">Beacon Signals</div><h2>부족한 부분과 다음 행동</h2></div><span class="count" id="signal-count">0 signals</span></div>
-            <ul class="list" id="signals"><li class="empty">프로젝트 신호를 계산하고 있습니다.</li></ul>
+            <div class="signal-summary" id="signal-summary"></div>
+            <div class="group-label" id="attend-label" hidden>먼저 볼 것 · 확인이 필요한 신호</div>
+            <ul class="list" id="signals-attend"></ul>
+            <div class="group-label" id="ready-label" hidden>준비된 기준</div>
+            <div id="signals-ready"></div>
           </section>
         </div>
 
@@ -342,13 +371,50 @@ export function renderDashboard(): string {
       }
 
       function renderSignal(signal) {
-        const item = text('li', 'list-item', '');
+        const item = text('li', 'list-item attend' + (signal.level === 'warning' ? ' is-warning' : ''), '');
         const top = text('div', 'signal-top', '');
         top.append(text('p', 'signal-title', signal.title), text('span', 'badge ' + signal.level, levelLabels[signal.level]));
         item.append(top, text('p', 'signal-detail', signal.detail));
         item.append(text('p', 'next-action', '다음 행동 · ' + signal.nextAction));
         item.append(text('div', 'source', '출처 · ' + signal.sources.join(', ')));
         return item;
+      }
+
+      function renderReadySignal(signal) {
+        const row = text('div', 'signal-ready', '');
+        row.append(text('span', 'dot', ''));
+        row.append(text('p', 'signal-ready-title', signal.title));
+        row.append(text('div', 'signal-ready-source', signal.sources.join(', ')));
+        return row;
+      }
+
+      function renderSignals(signals) {
+        const attend = signals.filter((signal) => signal.level !== 'ready');
+        const ready = signals.filter((signal) => signal.level === 'ready');
+        const counts = { warning: 0, attention: 0, ready: ready.length };
+        attend.forEach((signal) => { counts[signal.level] = (counts[signal.level] || 0) + 1; });
+
+        element('signal-count').textContent = attend.length > 0 ? attend.length + '개 확인 필요' : '모두 준비됨';
+
+        const summary = element('signal-summary');
+        summary.replaceChildren();
+        [['warning', '보완 필요'], ['attention', '확인 필요'], ['ready', '준비됨']].forEach(([level, label]) => {
+          if (!counts[level]) return;
+          const pill = text('span', 'summary-pill ' + level, '');
+          pill.append(text('span', 'dot', ''), text('span', '', label + ' ' + counts[level]));
+          summary.append(pill);
+        });
+
+        element('attend-label').hidden = attend.length === 0;
+        const attendList = element('signals-attend');
+        attendList.replaceChildren();
+        if (attend.length === 0) attendList.append(text('li', 'empty', '지금 확인이 필요한 신호가 없습니다. 기본 기준이 모두 준비되어 있습니다.'));
+        else attend.forEach((signal) => attendList.append(renderSignal(signal)));
+
+        element('ready-label').hidden = ready.length === 0;
+        const readyBox = element('signals-ready');
+        readyBox.replaceChildren();
+        ready.forEach((signal) => readyBox.append(renderReadySignal(signal)));
       }
 
       function renderArtifact(artifact) {
@@ -408,6 +474,21 @@ export function renderDashboard(): string {
           categories.append(text('span', 'day-category', (categoryLabels[category] || '변경') + ' ' + day.categoryCounts[category]));
         });
         item.append(categories);
+
+        const details = text('details', 'day-events', '');
+        details.append(text('summary', '', '이 날 한 일 ' + day.total + '건 보기'));
+        day.events.forEach((event) => {
+          const row = text('div', 'day-event', '');
+          const content = text('div', '', '');
+          content.append(text('p', 'day-event-title', event.title));
+          content.append(text('div', 'day-event-source', '출처 · ' + event.source + ':' + event.reference));
+          const side = text('div', 'day-event-side', '');
+          const time = new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date(event.occurredAt));
+          side.append(text('span', 'timeline-category', categoryLabels[event.category] || '변경'), text('span', 'day-event-time', time));
+          row.append(content, side);
+          details.append(row);
+        });
+        item.append(details);
         return item;
       }
 
@@ -548,11 +629,10 @@ export function renderDashboard(): string {
           element('nav-history-count').textContent = String(history.timelineCount);
           renderProcess(snapshot.process);
 
-          element('signal-count').textContent = snapshot.health.signals.length + ' signals';
+          renderSignals(snapshot.health.signals);
           element('artifact-label').textContent = projectArtifacts.length + ' 핵심 · ' + supportArtifacts.length + ' 지원';
           element('timeline-label').textContent = history.timeline.length + (history.timeline.length < history.timelineCount ? ' / ' + history.timelineCount : '') + ' events';
           element('change-label').textContent = history.changes.length + (history.changes.length < history.changeCount ? ' / ' + history.changeCount : '') + ' changes';
-          replaceList('signals', snapshot.health.signals, renderSignal, '현재 표시할 신호가 없습니다.');
           replaceList('artifacts', projectArtifacts, renderArtifact, '발견한 핵심 문서 산출물이 없습니다.');
           replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
           const days = groupByDay(history.timeline);

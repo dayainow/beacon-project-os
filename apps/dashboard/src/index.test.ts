@@ -32,6 +32,10 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(dashboard, /data-history-tab="daily"/);
   assert.match(dashboard, /data-history-tab="detail"/);
   assert.match(script, /activateHistoryTab/);
+  // Signals를 확인 필요/준비됨으로 분리해 가시성을 높인다.
+  assert.match(script, /renderSignals/);
+  assert.match(dashboard, /id="signals-attend"/);
+  assert.match(dashboard, /id="signals-ready"/);
   assert.match(dashboard, /id="auto-scan"/);
   assert.match(script, /setInterval/);
   assert.match(dashboard, /P0–P4 Process/);
