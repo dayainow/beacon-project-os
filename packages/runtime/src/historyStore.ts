@@ -182,6 +182,15 @@ export class ProjectHistoryStore {
     };
   }
 
+  snapshotById(snapshotId: number): ProjectSnapshot | null {
+    const row = this.database.prepare(`
+      SELECT snapshot_json
+      FROM project_snapshots
+      WHERE id = ?
+    `).get(snapshotId) as { snapshot_json: string } | undefined;
+    return row ? JSON.parse(row.snapshot_json) as ProjectSnapshot : null;
+  }
+
   history(limit = 100): ProjectHistory {
     const boundedLimit = Math.max(1, Math.min(200, Math.trunc(limit) || 100));
     const counts = this.counts();

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import {
+  completeProjectCycle,
   generateProjectBook,
   initializeProject,
   readProjectJourney,
@@ -20,6 +21,7 @@ interface ParsedArguments {
   openBrowser: boolean;
   output: string | null;
   goal: string | null;
+  summary: string | null;
   positionals: string[];
 }
 
@@ -30,6 +32,7 @@ function parseArguments(argv: string[]): ParsedArguments {
   let openBrowser = true;
   let output: string | null = null;
   let goal: string | null = null;
+  let summary: string | null = null;
   const positionals: string[] = [];
 
   for (let index = 0; index < rest.length; index += 1) {
@@ -47,6 +50,9 @@ function parseArguments(argv: string[]): ParsedArguments {
     } else if (argument === "--goal") {
       goal = rest[++index] ?? null;
       if (!goal) throw new Error("Cycle 목표를 입력하세요.");
+    } else if (argument === "--summary") {
+      summary = rest[++index] ?? null;
+      if (!summary) throw new Error("Cycle 요약을 입력하세요.");
     } else if (!argument.startsWith("--")) {
       positionals.push(argument);
     } else {
@@ -54,7 +60,7 @@ function parseArguments(argv: string[]): ParsedArguments {
     }
   }
 
-  return { command, root, port, openBrowser, output, goal, positionals };
+  return { command, root, port, openBrowser, output, goal, summary, positionals };
 }
 
 function openUrl(url: string): void {
@@ -72,6 +78,7 @@ Usage:
   beacon open [--root PATH] [--port PORT] [--no-browser]
   beacon identity [--root PATH]
   beacon cycle start "CYCLE NAME" --goal "GOAL" [--root PATH]
+  beacon cycle complete [--summary "SUMMARY"] [--root PATH]
   beacon cycle status [--root PATH]
   beacon export [--root PATH] [--output PATH]`);
 }
@@ -125,12 +132,42 @@ async function main(): Promise<void> {
       return;
     }
 
-    throw new Error("사용법: beacon cycle start \"이름\" --goal \"목표\" 또는 beacon cycle status");
+    if (action === "complete") {
+      const journey = await readProjectJourney(options.root);
+      const active = journey.cycles.find((cycle) => cycle.status === "active");
+      if (!active) throw new Error("종료할 진행 중인 Cycle이 없습니다.");
+
+      const endSnapshot = await scanProject(options.root);
+      const historyStore = new ProjectHistoryStore(options.root);
+      let endSnapshotId: number;
+      let startSnapshot;
+      try {
+        endSnapshotId = historyStore.record(endSnapshot).snapshotId;
+        startSnapshot = historyStore.snapshotById(active.baseline.snapshotId);
+      } finally {
+        historyStore.close();
+      }
+      if (!startSnapshot) {
+        throw new Error("Cycle 시작 기준선 Snapshot을 History에서 찾지 못했습니다.");
+      }
+
+      const completed = await completeProjectCycle(options.root, {
+        startSnapshot,
+        endSnapshot,
+        endSnapshotId,
+        summary: options.summary ?? undefined,
+      });
+      console.log(JSON.stringify(completed, null, 2));
+      return;
+    }
+
+    throw new Error("사용법: beacon cycle start \"이름\" --goal \"목표\", beacon cycle complete 또는 beacon cycle status");
   }
 
   if (options.command === "export") {
     const identity = await readProjectIdentity(options.root);
     const snapshot = await scanProject(options.root);
+    const { cycles } = await readProjectJourney(options.root);
     const historyStore = new ProjectHistoryStore(options.root);
     let history;
     try {
@@ -142,7 +179,7 @@ async function main(): Promise<void> {
 
     const outputPath = path.resolve(options.root, options.output ?? "PROJECT_BOOK.md");
     await mkdir(path.dirname(outputPath), { recursive: true });
-    await writeFile(outputPath, generateProjectBook({ identity, snapshot, history }), "utf8");
+    await writeFile(outputPath, generateProjectBook({ identity, snapshot, history, cycles }), "utf8");
     console.log(JSON.stringify({
       outputPath,
       snapshotCount: history.snapshotCount,

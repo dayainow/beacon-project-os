@@ -186,6 +186,13 @@ export interface ProjectTimeline {
   truncated: boolean;
 }
 
+export interface TimelineDay {
+  date: string;
+  total: number;
+  categoryCounts: Partial<Record<TimelineCategory, number>>;
+  events: TimelineEvent[];
+}
+
 export interface ProjectSnapshot {
   scannedAt: string;
   observation: ProjectObservation;
@@ -568,8 +575,11 @@ function commitTimelineCategory(subject: string): TimelineCategory {
   if (/^(docs?|document|readme)\b|^(update|refresh)\b.*\b(docs?|readme)\b/i.test(subject)) return "documentation";
   if (/^(release|publish|deploy)\b/i.test(subject)) return "delivery";
   if (/^(build|ci|chore)\b|\b(codeowners?|dockerfile|workflow)\b/i.test(subject)) return "operations";
+  // 의존성·저장소 유지보수 성격의 흔한 동사를 보수적으로 운영으로 본다.
+  if (/^(bump|upgrade|downgrade|pin|merge)\b/i.test(subject) || /^merge (pull request|branch|remote)\b/i.test(subject)) return "operations";
   if (/\b(design|architecture|adr)\b/i.test(subject)) return "design";
-  if (/^(add|implement|introduce|migrate|extract|improve|restore|support|enable)\b/i.test(subject)) return "implementation";
+  // 명시적인 코드 변경 동사에 한해 기능으로 본다. 의미가 모호한 제목은 그대로 change로 둔다.
+  if (/^(add|implement|introduce|migrate|extract|improve|restore|support|enable|remove|delete|rename|move|replace|refactor|rework|simplify|clean|cleanup|handle|prevent|wire|polish|tweak|revamp)\b/i.test(subject)) return "implementation";
   return "change";
 }
 
@@ -622,6 +632,31 @@ export function buildProjectTimeline(observation: ProjectObservation): ProjectTi
     total: allEvents.length,
     truncated: allEvents.length > MAX_TIMELINE_EVENTS,
   };
+}
+
+export function groupTimelineByDay(events: TimelineEvent[]): TimelineDay[] {
+  const buckets = new Map<string, TimelineEvent[]>();
+  for (const event of events) {
+    // ISO 시각의 UTC 날짜 부분을 하루 단위 키로 쓴다.
+    const date = event.occurredAt.slice(0, 10);
+    const bucket = buckets.get(date);
+    if (bucket) bucket.push(event);
+    else buckets.set(date, [event]);
+  }
+
+  return [...buckets.entries()]
+    .sort(([left], [right]) => right.localeCompare(left))
+    .map(([date, dayEvents]) => {
+      const ordered = [...dayEvents].sort((left, right) => {
+        const timeDifference = Date.parse(right.occurredAt) - Date.parse(left.occurredAt);
+        return timeDifference || left.id.localeCompare(right.id);
+      });
+      const categoryCounts: Partial<Record<TimelineCategory, number>> = {};
+      for (const event of ordered) {
+        categoryCounts[event.category] = (categoryCounts[event.category] ?? 0) + 1;
+      }
+      return { date, total: ordered.length, categoryCounts, events: ordered };
+    });
 }
 
 export async function scanProject(root: string, now = new Date()): Promise<ProjectSnapshot> {
