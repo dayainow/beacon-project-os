@@ -1,4 +1,5 @@
 import type { ProjectChange } from "./history.js";
+import type { ProjectCycle } from "./journey.js";
 import type { ProjectSnapshot, TimelineEvent } from "./scanner.js";
 
 export interface ProjectBookIdentity {
@@ -22,6 +23,7 @@ export interface ProjectBookInput {
   identity: ProjectBookIdentity;
   snapshot: ProjectSnapshot;
   history: ProjectBookHistory;
+  cycles?: ProjectCycle[];
 }
 
 const artifactLabels = {
@@ -68,7 +70,44 @@ function table(headers: string[], rows: string[][]): string {
   ].join("\n");
 }
 
-export function generateProjectBook({ identity, snapshot, history }: ProjectBookInput): string {
+function stageLabel(stageId: string | null): string {
+  return stageId ? stageId.toUpperCase() : "완료";
+}
+
+function cycleSummaryCell(cycle: ProjectCycle): string {
+  if (cycle.status === "active") return "진행 중";
+  const result = cycle.result;
+  if (!result) return cycle.summary ?? "종료 요약 없음";
+  const parts = [
+    `산출물 +${result.artifactsAdded}/~${result.artifactsModified}/-${result.artifactsDeleted}`,
+    `commit +${result.newCommits}`,
+    `Health ${result.healthBefore.score}→${result.healthAfter.score}`,
+    `Gate ${stageLabel(result.gateBefore)}→${stageLabel(result.gateAfter)}`,
+  ];
+  return cycle.summary ? `${cycle.summary} · ${parts.join(" · ")}` : parts.join(" · ");
+}
+
+function cycleSection(cycles: ProjectCycle[]): string {
+  if (cycles.length === 0) return "";
+  const ordered = [...cycles].sort((left, right) => right.sequence - left.sequence);
+  const rows = ordered.map((cycle) => [
+    `#${cycle.sequence}`,
+    cycle.name,
+    cycle.goal,
+    cycle.status === "completed" ? "완료" : "진행 중",
+    `${cycle.startedAt} → ${cycle.completedAt ?? "진행 중"}`,
+    cycleSummaryCell(cycle),
+  ]);
+  return `
+
+## 프로젝트 Cycle
+
+> 프로젝트 시작부터 현재까지의 Cycle 흐름입니다. 최신 Cycle이 먼저 나타납니다.
+
+${table(["순번", "이름", "목표", "상태", "기간", "달성 요약"], rows)}`;
+}
+
+export function generateProjectBook({ identity, snapshot, history, cycles = [] }: ProjectBookInput): string {
   const processRows = snapshot.process.stages.map((stage) => [
     stage.id.toUpperCase(),
     stage.name,
@@ -139,6 +178,7 @@ export function generateProjectBook({ identity, snapshot, history }: ProjectBook
 - 저장된 기준선: **${history.snapshotCount}개**
 - 누적 변화: **${history.changeCount}개**
 - 누적 Timeline: **${history.timelineCount}개**
+${cycleSection(cycles)}
 
 ## P0–P4 Gate 준비도
 

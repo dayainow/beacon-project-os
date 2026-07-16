@@ -1,7 +1,8 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { diffProjectSnapshots } from "./history.js";
 import { BEACON_DIRECTORY, readConfig } from "./index.js";
-import type { ProjectSnapshot } from "./scanner.js";
+import type { ProjectHealth, ProjectSnapshot } from "./scanner.js";
 
 export const JOURNEY_VERSION = 1;
 
@@ -10,6 +11,27 @@ export interface CycleBaseline {
   scannedAt: string;
   gitHead: string | null;
   artifactPaths: string[];
+}
+
+export interface CycleHealthMark {
+  score: ProjectHealth["score"];
+  status: ProjectHealth["status"];
+}
+
+export interface CycleResult {
+  endSnapshotId: number;
+  endScannedAt: string;
+  endGitHead: string | null;
+  artifactsAdded: number;
+  artifactsModified: number;
+  artifactsDeleted: number;
+  newCommits: number;
+  healthBefore: CycleHealthMark;
+  healthAfter: CycleHealthMark;
+  gateBefore: string | null;
+  gateAfter: string | null;
+  readyStagesBefore: number;
+  readyStagesAfter: number;
 }
 
 export interface ProjectCycle {
@@ -21,6 +43,8 @@ export interface ProjectCycle {
   startedAt: string;
   completedAt: string | null;
   baseline: CycleBaseline;
+  summary: string | null;
+  result: CycleResult | null;
 }
 
 export interface ProjectJourney {
@@ -56,12 +80,24 @@ function isProjectCycle(value: unknown): value is ProjectCycle {
     && (cycle.status === "active" || cycle.status === "completed")
     && typeof cycle.startedAt === "string"
     && (cycle.completedAt === null || typeof cycle.completedAt === "string")
+    // summary·result는 v0.2.0 이전 기록에 없을 수 있어 undefined도 허용한다.
+    && (cycle.summary === undefined || cycle.summary === null || typeof cycle.summary === "string")
+    && (cycle.result === undefined || cycle.result === null || typeof cycle.result === "object")
     && typeof baseline?.snapshotId === "number"
     && typeof baseline.scannedAt === "string"
     && (baseline.gitHead === null || typeof baseline.gitHead === "string")
     && Array.isArray(baseline.artifactPaths)
     && baseline.artifactPaths.every((item) => typeof item === "string")
   );
+}
+
+function normalizeCycle(cycle: ProjectCycle): ProjectCycle {
+  // 이전 버전 기록에 누락된 필드를 안전한 기본값으로 채워 읽는다.
+  return {
+    ...cycle,
+    summary: cycle.summary ?? null,
+    result: cycle.result ?? null,
+  };
 }
 
 export async function readProjectJourney(root: string): Promise<ProjectJourney> {
@@ -75,7 +111,7 @@ export async function readProjectJourney(root: string): Promise<ProjectJourney> 
     ) {
       throw new Error("지원하지 않는 Beacon Journey 설정입니다. 파일을 확인하거나 마이그레이션하세요.");
     }
-    return value as ProjectJourney;
+    return { version: JOURNEY_VERSION, cycles: value.cycles.map(normalizeCycle) };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return emptyJourney();
     throw error;
@@ -123,6 +159,8 @@ export async function startProjectCycle(
         .map((artifact) => artifact.path)
         .sort((left, right) => left.localeCompare(right)),
     },
+    summary: null,
+    result: null,
   };
 
   await writeProjectJourney(root, {
@@ -130,4 +168,62 @@ export async function startProjectCycle(
     cycles: [...journey.cycles, cycle],
   });
   return cycle;
+}
+
+export interface CompleteProjectCycleInput {
+  startSnapshot: ProjectSnapshot;
+  endSnapshot: ProjectSnapshot;
+  endSnapshotId: number;
+  summary?: string;
+  now?: Date;
+}
+
+function healthMark(snapshot: ProjectSnapshot): CycleHealthMark {
+  return { score: snapshot.health.score, status: snapshot.health.status };
+}
+
+function buildCycleResult(input: CompleteProjectCycleInput): CycleResult {
+  const changes = diffProjectSnapshots(input.startSnapshot, input.endSnapshot);
+  const artifactChanges = changes.filter((change) => change.entity === "artifact");
+  return {
+    endSnapshotId: input.endSnapshotId,
+    endScannedAt: input.endSnapshot.scannedAt,
+    endGitHead: input.endSnapshot.observation.git.head,
+    artifactsAdded: artifactChanges.filter((change) => change.kind === "added").length,
+    artifactsModified: artifactChanges.filter((change) => change.kind === "modified").length,
+    artifactsDeleted: artifactChanges.filter((change) => change.kind === "deleted").length,
+    newCommits: changes.filter((change) => change.entity === "commit").length,
+    healthBefore: healthMark(input.startSnapshot),
+    healthAfter: healthMark(input.endSnapshot),
+    gateBefore: input.startSnapshot.process.currentStageId,
+    gateAfter: input.endSnapshot.process.currentStageId,
+    readyStagesBefore: input.startSnapshot.process.readyStages,
+    readyStagesAfter: input.endSnapshot.process.readyStages,
+  };
+}
+
+export async function completeProjectCycle(
+  root: string,
+  input: CompleteProjectCycleInput,
+): Promise<ProjectCycle> {
+  await readConfig(root);
+  const journey = await readProjectJourney(root);
+  const activeIndex = journey.cycles.findIndex((cycle) => cycle.status === "active");
+  if (activeIndex === -1) {
+    throw new Error("종료할 진행 중인 Cycle이 없습니다.");
+  }
+
+  const summary = input.summary?.trim() ?? "";
+  const completed: ProjectCycle = {
+    ...journey.cycles[activeIndex],
+    status: "completed",
+    completedAt: (input.now ?? new Date()).toISOString(),
+    summary: summary || null,
+    result: buildCycleResult(input),
+  };
+
+  const cycles = [...journey.cycles];
+  cycles[activeIndex] = completed;
+  await writeProjectJourney(root, { version: JOURNEY_VERSION, cycles });
+  return completed;
 }

@@ -105,6 +105,12 @@ export function renderDashboard(): string {
       .timeline-side { display: grid; justify-items: end; gap: 7px; }
       .timeline-category { border-radius: 999px; padding: 5px 8px; background: #f2efff; color: #5b43ff; font-size: 10px; font-weight: 850; white-space: nowrap; }
       .timeline-meta { color: #8a8d95; font-size: 11px; white-space: nowrap; }
+      .badge.completed { background: #eaf9f2; color: #08764d; }
+      .badge.active { background: #f2efff; color: #5b43ff; }
+      .cycle-goal-line { margin: 7px 0 0; color: #666a73; font-size: 13px; line-height: 1.55; }
+      .cycle-deltas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+      .cycle-delta { border: 1px solid #e1e2e5; background: #fafafa; border-radius: 999px; padding: 5px 9px; font-size: 11px; color: #555962; }
+      .cycle-summary-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
       .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
       .error { margin-bottom: 12px; padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
       @media (max-width: 960px) { .app-shell { display: block; } .sidebar { position: sticky; z-index: 10; width: 100%; height: auto; padding: 14px 20px; border-right: 0; border-bottom: 1px solid #dedfe3; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 20px; } .sidebar-brand { padding: 0; border: 0; } .sidebar-brand strong { margin: 0; font-size: 18px; } .sidebar-brand .brand, .sidebar-brand span, .sidebar-project, .nav-description { display: none; } .navigation { display: flex; justify-content: flex-end; gap: 5px; padding: 0; overflow-x: auto; } .nav-link { display: flex; align-items: center; gap: 7px; padding: 9px 11px; white-space: nowrap; } .metrics { grid-template-columns: repeat(2, 1fr); } .stage-grid { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
@@ -222,6 +228,11 @@ export function renderDashboard(): string {
         </div>
 
         <div class="view" id="view-history" data-view-panel="history" hidden>
+          <section class="card panel cycles">
+            <div class="panel-head"><div><div class="eyebrow">Project Journey</div><h2>Cycle 로그</h2></div><span class="count" id="cycle-log-label">0 cycles</span></div>
+            <ul class="list" id="cycle-log"><li class="empty">아직 시작한 Cycle이 없습니다.</li></ul>
+          </section>
+
           <section class="card panel timeline">
             <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
             <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
@@ -329,6 +340,38 @@ export function renderDashboard(): string {
         return item;
       }
 
+      function stageCode(stageId) {
+        return stageId ? String(stageId).toUpperCase() : '완료';
+      }
+
+      function renderCycle(cycle) {
+        const item = text('li', 'list-item', '');
+        const top = text('div', 'signal-top', '');
+        const heading = text('div', '', '');
+        heading.append(text('span', 'cycle-number', 'CYCLE ' + String(cycle.sequence).padStart(2, '0')));
+        heading.append(text('p', 'signal-title', cycle.name));
+        const isActive = cycle.status === 'active';
+        top.append(heading, text('span', 'badge ' + (isActive ? 'active' : 'completed'), isActive ? '진행 중' : '완료'));
+        item.append(top);
+        item.append(text('p', 'cycle-goal-line', cycle.goal));
+
+        const fmt = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' });
+        const period = fmt.format(new Date(cycle.startedAt)) + ' → ' + (cycle.completedAt ? fmt.format(new Date(cycle.completedAt)) : '진행 중');
+
+        const result = cycle.result;
+        if (result) {
+          const deltas = text('div', 'cycle-deltas', '');
+          deltas.append(text('span', 'cycle-delta', '산출물 +' + result.artifactsAdded + ' / ~' + result.artifactsModified + ' / -' + result.artifactsDeleted));
+          deltas.append(text('span', 'cycle-delta', 'commit +' + result.newCommits));
+          deltas.append(text('span', 'cycle-delta', 'Health ' + result.healthBefore.score + ' → ' + result.healthAfter.score));
+          deltas.append(text('span', 'cycle-delta', 'Gate ' + stageCode(result.gateBefore) + ' → ' + stageCode(result.gateAfter)));
+          item.append(deltas);
+        }
+        if (cycle.summary) item.append(text('p', 'cycle-summary-note', '요약 · ' + cycle.summary));
+        item.append(text('div', 'source', '기간 · ' + period));
+        return item;
+      }
+
       function renderStage(stage) {
         const item = text('div', 'stage ' + stage.state, '');
         item.append(text('span', 'stage-code', stage.id));
@@ -432,6 +475,9 @@ export function renderDashboard(): string {
           replaceList('artifacts', projectArtifacts, renderArtifact, '발견한 핵심 문서 산출물이 없습니다.');
           replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
           replaceList('changes', history.changes, renderChange, '첫 스캔을 기준선으로 저장했습니다. 다음 스캔부터 추가·변경·삭제를 기록합니다.');
+          const orderedCycles = [...journey.cycles].sort((left, right) => right.sequence - left.sequence);
+          element('cycle-log-label').textContent = orderedCycles.length + ' cycles';
+          replaceList('cycle-log', orderedCycles, renderCycle, 'beacon cycle start로 첫 Cycle을 시작하면 여기에 시작–완성 로그가 쌓입니다.');
           element('status').textContent = '연결됨';
         } catch {
           element('status').textContent = '확인 필요';
