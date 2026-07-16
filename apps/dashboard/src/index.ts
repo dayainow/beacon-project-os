@@ -61,6 +61,7 @@ export function renderDashboard(): string {
       .journey-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
       .journey h2 { margin-top: 8px; }
       .journey-goal { margin: 10px 0 0; max-width: 760px; color: #555962; font-size: 14px; line-height: 1.6; }
+      .journey-hint { margin: 10px 0 0; max-width: 760px; color: #8a8d95; font-size: 12px; line-height: 1.5; }
       .journey-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
       .cycle-number { color: #5b43ff; font: 800 12px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
       .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
@@ -226,6 +227,7 @@ export function renderDashboard(): string {
                 <div class="eyebrow">Project Journey · 현재 Cycle</div>
                 <h2 id="cycle-name">Cycle을 확인하고 있습니다.</h2>
                 <p class="journey-goal" id="cycle-goal">프로젝트 목표와 시작 기준선을 불러오는 중입니다.</p>
+                <p class="journey-hint">Cycle은 완결되는 목표 하나(마일스톤)입니다. 시작 시점을 기준선으로 잡고, 종료하면 그 사이 성과를 요약합니다.</p>
               </div>
               <span class="cycle-number" id="cycle-number">—</span>
             </div>
@@ -291,7 +293,7 @@ export function renderDashboard(): string {
           <div class="history-panel" data-history-panel="cycle" hidden>
             <section class="card panel cycles">
               <div class="panel-head"><div><div class="eyebrow">Project Journey</div><h2>Cycle 로그</h2></div><span class="count" id="cycle-log-label">0 cycles</span></div>
-              <p class="panel-hint">프로젝트를 차수(Cycle)로 끊어, 각 차수에서 무엇을 이뤘는지 보여줍니다.</p>
+              <p class="panel-hint">완결되는 목표(마일스톤) 단위로 끊어, 각 Cycle에서 무엇을 이뤘는지 보여줍니다.</p>
               <ul class="list" id="cycle-log"><li class="empty">아직 시작한 Cycle이 없습니다.</li></ul>
             </section>
           </div>
@@ -608,7 +610,7 @@ export function renderDashboard(): string {
             element('sidebar-cycle').textContent = 'Cycle ' + String(activeCycle.sequence).padStart(2, '0') + ' · ' + activeCycle.name;
           } else {
             element('cycle-name').textContent = '아직 시작한 Cycle이 없습니다.';
-            element('cycle-goal').textContent = 'beacon cycle start로 이번 여정의 이름과 목표를 기록하세요.';
+            element('cycle-goal').textContent = 'beacon cycle start로 이번에 완성할 목표(마일스톤) 하나를 시작하세요.';
             element('cycle-number').textContent = journey.cycles.length + ' cycles';
             element('cycle-started').textContent = '시작 시점 · —';
             element('cycle-baseline').textContent = '기준선 · —';
@@ -644,7 +646,7 @@ export function renderDashboard(): string {
           const orderedCycles = [...journey.cycles].sort((left, right) => right.sequence - left.sequence);
           element('cycle-log-label').textContent = orderedCycles.length + ' cycles';
           element('tab-cycle-count').textContent = String(orderedCycles.length);
-          replaceList('cycle-log', orderedCycles, renderCycle, 'beacon cycle start로 첫 Cycle을 시작하면 여기에 시작–완성 로그가 쌓입니다.');
+          replaceList('cycle-log', orderedCycles, renderCycle, '완성할 목표(마일스톤) 하나를 beacon cycle start로 시작하면, 여기에 시작–완성 로그가 쌓입니다.');
           element('status').textContent = '연결됨';
         } catch {
           element('status').textContent = '확인 필요';

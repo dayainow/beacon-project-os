@@ -34,6 +34,9 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(script, /activateHistoryTab/);
   // Signals를 확인 필요/준비됨으로 분리해 가시성을 높인다.
   assert.match(script, /renderSignals/);
+  // Cycle을 마일스톤 단위로 정의하는 안내가 있어야 한다.
+  assert.match(dashboard, /마일스톤/);
+  assert.match(dashboard, /journey-hint/);
   assert.match(dashboard, /id="signals-attend"/);
   assert.match(dashboard, /id="signals-ready"/);
   assert.match(dashboard, /id="auto-scan"/);
