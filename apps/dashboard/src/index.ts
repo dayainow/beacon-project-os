@@ -37,6 +37,17 @@ export function renderDashboard(): string {
       .refresh { border: 1px solid #d8d9dd; background: #fff; border-radius: 10px; padding: 9px 13px; color: #34373d; cursor: pointer; font-weight: 700; }
       .refresh:hover { border-color: #9d91ff; }
       .refresh:disabled { cursor: wait; opacity: .55; }
+      .auto-scan { display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid #d8d9dd; border-radius: 10px; background: #fff; color: #555962; font-size: 12px; font-weight: 700; cursor: pointer; }
+      .auto-scan input { accent-color: #5b43ff; cursor: pointer; }
+      .history-tabs { display: flex; gap: 6px; margin-bottom: 4px; }
+      .history-tab { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border: 1px solid #dedfe3; border-radius: 999px; background: #fff; color: #555962; font-size: 13px; font-weight: 800; cursor: pointer; }
+      .history-tab:hover { border-color: #9d91ff; }
+      .history-tab[aria-selected="true"] { border-color: #d9d2ff; background: #f4f1ff; color: #3f2ec4; box-shadow: 0 6px 18px rgb(63 46 196 / 8%); }
+      .tab-count { min-width: 20px; padding: 2px 6px; border-radius: 999px; background: #ececf0; color: #6c707a; font-size: 10px; font-weight: 800; text-align: center; }
+      .history-tab[aria-selected="true"] .tab-count { background: #ded7ff; color: #4935d0; }
+      .history-panel { display: grid; gap: 12px; }
+      .history-panel[hidden] { display: none; }
+      .panel-hint { margin: 0; padding: 0 24px 4px; color: #8a8d95; font-size: 12px; line-height: 1.5; }
       .card { background: #fff; border: 1px solid #dedfe3; border-radius: 18px; box-shadow: 0 10px 30px rgb(23 25 29 / 5%); }
       .identity { padding: 26px; }
       .eyebrow { color: #777b85; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
@@ -98,6 +109,20 @@ export function renderDashboard(): string {
       .badge.deleted { background: #fff0f1; color: #bd2736; }
       .signal-detail { margin: 7px 0 0; color: #666a73; font-size: 13px; line-height: 1.55; }
       .next-action { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
+      .signal-summary { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 24px; border-bottom: 1px solid #ececef; }
+      .summary-pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+      .summary-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+      .summary-pill.warning { background: #fff0f1; color: #bd2736; } .summary-pill.warning .dot { background: #df4b57; }
+      .summary-pill.attention { background: #fff7df; color: #9a6200; } .summary-pill.attention .dot { background: #f0a100; }
+      .summary-pill.ready { background: #eaf9f2; color: #08764d; } .summary-pill.ready .dot { background: #13a76f; }
+      .group-label { padding: 16px 24px 4px; color: #8a8d95; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+      .list-item.attend { border-left: 3px solid #f0a100; }
+      .list-item.attend.is-warning { border-left-color: #df4b57; }
+      .signal-ready { display: flex; align-items: center; gap: 11px; padding: 13px 24px; border-bottom: 1px solid #f2f2f5; }
+      .signal-ready:last-child { border-bottom: 0; }
+      .signal-ready .dot { width: 9px; height: 9px; border-radius: 50%; background: #13a76f; flex: none; }
+      .signal-ready-title { margin: 0; font-size: 13px; font-weight: 700; color: #34373d; }
+      .signal-ready-source { margin-left: auto; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; text-align: right; }
       .source { margin-top: 9px; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
       .artifact-row, .timeline-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
       .artifact-kind { color: #5b43ff; font-size: 10px; font-weight: 800; text-transform: uppercase; }
@@ -115,6 +140,17 @@ export function renderDashboard(): string {
       .day-date { margin: 0; font-size: 15px; font-weight: 850; letter-spacing: -.02em; }
       .day-total { color: #5b43ff; font-size: 12px; font-weight: 800; white-space: nowrap; }
       .day-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+      .day-events { margin-top: 14px; }
+      .day-events > summary { list-style: none; cursor: pointer; color: #5b43ff; font-size: 12px; font-weight: 800; user-select: none; }
+      .day-events > summary::-webkit-details-marker { display: none; }
+      .day-events > summary::before { content: '▸ '; }
+      .day-events[open] > summary::before { content: '▾ '; }
+      .day-event { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 11px 0; border-top: 1px solid #eeeef1; }
+      .day-event:first-of-type { margin-top: 10px; }
+      .day-event-title { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.4; }
+      .day-event-source { margin-top: 4px; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+      .day-event-side { display: grid; justify-items: end; gap: 6px; white-space: nowrap; }
+      .day-event-time { color: #8a8d95; font-size: 11px; }
       .day-category { border-radius: 999px; padding: 4px 9px; background: #f2efff; color: #5b43ff; font-size: 11px; font-weight: 800; white-space: nowrap; }
       .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
       .error { margin-bottom: 12px; padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
@@ -164,6 +200,7 @@ export function renderDashboard(): string {
           </div>
           <div class="header-actions">
             <div class="status" id="status">프로젝트 확인 중</div>
+            <label class="auto-scan" for="auto-scan"><input type="checkbox" id="auto-scan" />자동 스캔</label>
             <button class="refresh" id="refresh" type="button">다시 스캔</button>
           </div>
         </header>
@@ -208,7 +245,11 @@ export function renderDashboard(): string {
 
           <section class="card panel">
             <div class="panel-head"><div><div class="eyebrow">Beacon Signals</div><h2>부족한 부분과 다음 행동</h2></div><span class="count" id="signal-count">0 signals</span></div>
-            <ul class="list" id="signals"><li class="empty">프로젝트 신호를 계산하고 있습니다.</li></ul>
+            <div class="signal-summary" id="signal-summary"></div>
+            <div class="group-label" id="attend-label" hidden>먼저 볼 것 · 확인이 필요한 신호</div>
+            <ul class="list" id="signals-attend"></ul>
+            <div class="group-label" id="ready-label" hidden>준비된 기준</div>
+            <div id="signals-ready"></div>
           </section>
         </div>
 
@@ -233,25 +274,41 @@ export function renderDashboard(): string {
         </div>
 
         <div class="view" id="view-history" data-view-panel="history" hidden>
-          <section class="card panel cycles">
-            <div class="panel-head"><div><div class="eyebrow">Project Journey</div><h2>Cycle 로그</h2></div><span class="count" id="cycle-log-label">0 cycles</span></div>
-            <ul class="list" id="cycle-log"><li class="empty">아직 시작한 Cycle이 없습니다.</li></ul>
-          </section>
+          <div class="history-tabs" role="tablist" aria-label="히스토리 보기">
+            <button class="history-tab" type="button" data-history-tab="daily" aria-selected="true">일자별<span class="tab-count" id="tab-daily-count">—</span></button>
+            <button class="history-tab" type="button" data-history-tab="cycle" aria-selected="false">Cycle<span class="tab-count" id="tab-cycle-count">—</span></button>
+            <button class="history-tab" type="button" data-history-tab="detail" aria-selected="false">상세<span class="tab-count" id="tab-detail-count">—</span></button>
+          </div>
 
-          <section class="card panel daily">
-            <div class="panel-head"><div><div class="eyebrow">Daily Activity</div><h2>일자별 작업</h2></div><span class="count" id="daily-label">0 days</span></div>
-            <ul class="list" id="daily"><li class="empty">날짜별로 묶을 작업 이벤트가 아직 없습니다.</li></ul>
-          </section>
+          <div class="history-panel" data-history-panel="daily">
+            <section class="card panel daily">
+              <div class="panel-head"><div><div class="eyebrow">Daily Activity</div><h2>일자별 작업</h2></div><span class="count" id="daily-label">0 days</span></div>
+              <p class="panel-hint">하루 단위로 무엇을, 몇 건 했는지 묶어 보여줍니다.</p>
+              <ul class="list" id="daily"><li class="empty">날짜별로 묶을 작업 이벤트가 아직 없습니다.</li></ul>
+            </section>
+          </div>
 
-          <section class="card panel timeline">
-            <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
-            <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
-          </section>
+          <div class="history-panel" data-history-panel="cycle" hidden>
+            <section class="card panel cycles">
+              <div class="panel-head"><div><div class="eyebrow">Project Journey</div><h2>Cycle 로그</h2></div><span class="count" id="cycle-log-label">0 cycles</span></div>
+              <p class="panel-hint">프로젝트를 차수(Cycle)로 끊어, 각 차수에서 무엇을 이뤘는지 보여줍니다.</p>
+              <ul class="list" id="cycle-log"><li class="empty">아직 시작한 Cycle이 없습니다.</li></ul>
+            </section>
+          </div>
 
-          <section class="card panel changes">
-            <div class="panel-head"><div><div class="eyebrow">Append-only Activity</div><h2>스캔 사이의 변화</h2></div><span class="count" id="change-label">0 changes</span></div>
-            <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장됩니다.</li></ul>
-          </section>
+          <div class="history-panel" data-history-panel="detail" hidden>
+            <section class="card panel timeline">
+              <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
+              <p class="panel-hint">commit과 문서 변경을 하나씩 시간순으로 나열합니다.</p>
+              <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
+            </section>
+
+            <section class="card panel changes">
+              <div class="panel-head"><div><div class="eyebrow">Append-only Activity</div><h2>스캔 사이의 변화</h2></div><span class="count" id="change-label">0 changes</span></div>
+              <p class="panel-hint">직전 스캔과 비교해 새로 생기거나 바뀐 항목을 보여줍니다.</p>
+              <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장됩니다.</li></ul>
+            </section>
+          </div>
         </div>
       </main>
     </div>
@@ -304,14 +361,60 @@ export function renderDashboard(): string {
         if (scrollToTop) window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
+      function activateHistoryTab(tab) {
+        document.querySelectorAll('[data-history-panel]').forEach((panel) => {
+          panel.hidden = panel.dataset.historyPanel !== tab;
+        });
+        document.querySelectorAll('[data-history-tab]').forEach((button) => {
+          button.setAttribute('aria-selected', button.dataset.historyTab === tab ? 'true' : 'false');
+        });
+      }
+
       function renderSignal(signal) {
-        const item = text('li', 'list-item', '');
+        const item = text('li', 'list-item attend' + (signal.level === 'warning' ? ' is-warning' : ''), '');
         const top = text('div', 'signal-top', '');
         top.append(text('p', 'signal-title', signal.title), text('span', 'badge ' + signal.level, levelLabels[signal.level]));
         item.append(top, text('p', 'signal-detail', signal.detail));
         item.append(text('p', 'next-action', '다음 행동 · ' + signal.nextAction));
         item.append(text('div', 'source', '출처 · ' + signal.sources.join(', ')));
         return item;
+      }
+
+      function renderReadySignal(signal) {
+        const row = text('div', 'signal-ready', '');
+        row.append(text('span', 'dot', ''));
+        row.append(text('p', 'signal-ready-title', signal.title));
+        row.append(text('div', 'signal-ready-source', signal.sources.join(', ')));
+        return row;
+      }
+
+      function renderSignals(signals) {
+        const attend = signals.filter((signal) => signal.level !== 'ready');
+        const ready = signals.filter((signal) => signal.level === 'ready');
+        const counts = { warning: 0, attention: 0, ready: ready.length };
+        attend.forEach((signal) => { counts[signal.level] = (counts[signal.level] || 0) + 1; });
+
+        element('signal-count').textContent = attend.length > 0 ? attend.length + '개 확인 필요' : '모두 준비됨';
+
+        const summary = element('signal-summary');
+        summary.replaceChildren();
+        [['warning', '보완 필요'], ['attention', '확인 필요'], ['ready', '준비됨']].forEach(([level, label]) => {
+          if (!counts[level]) return;
+          const pill = text('span', 'summary-pill ' + level, '');
+          pill.append(text('span', 'dot', ''), text('span', '', label + ' ' + counts[level]));
+          summary.append(pill);
+        });
+
+        element('attend-label').hidden = attend.length === 0;
+        const attendList = element('signals-attend');
+        attendList.replaceChildren();
+        if (attend.length === 0) attendList.append(text('li', 'empty', '지금 확인이 필요한 신호가 없습니다. 기본 기준이 모두 준비되어 있습니다.'));
+        else attend.forEach((signal) => attendList.append(renderSignal(signal)));
+
+        element('ready-label').hidden = ready.length === 0;
+        const readyBox = element('signals-ready');
+        readyBox.replaceChildren();
+        ready.forEach((signal) => readyBox.append(renderReadySignal(signal)));
       }
 
       function renderArtifact(artifact) {
@@ -371,6 +474,21 @@ export function renderDashboard(): string {
           categories.append(text('span', 'day-category', (categoryLabels[category] || '변경') + ' ' + day.categoryCounts[category]));
         });
         item.append(categories);
+
+        const details = text('details', 'day-events', '');
+        details.append(text('summary', '', '이 날 한 일 ' + day.total + '건 보기'));
+        day.events.forEach((event) => {
+          const row = text('div', 'day-event', '');
+          const content = text('div', '', '');
+          content.append(text('p', 'day-event-title', event.title));
+          content.append(text('div', 'day-event-source', '출처 · ' + event.source + ':' + event.reference));
+          const side = text('div', 'day-event-side', '');
+          const time = new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date(event.occurredAt));
+          side.append(text('span', 'timeline-category', categoryLabels[event.category] || '변경'), text('span', 'day-event-time', time));
+          row.append(content, side);
+          details.append(row);
+        });
+        item.append(details);
         return item;
       }
 
@@ -511,19 +629,21 @@ export function renderDashboard(): string {
           element('nav-history-count').textContent = String(history.timelineCount);
           renderProcess(snapshot.process);
 
-          element('signal-count').textContent = snapshot.health.signals.length + ' signals';
+          renderSignals(snapshot.health.signals);
           element('artifact-label').textContent = projectArtifacts.length + ' 핵심 · ' + supportArtifacts.length + ' 지원';
           element('timeline-label').textContent = history.timeline.length + (history.timeline.length < history.timelineCount ? ' / ' + history.timelineCount : '') + ' events';
           element('change-label').textContent = history.changes.length + (history.changes.length < history.changeCount ? ' / ' + history.changeCount : '') + ' changes';
-          replaceList('signals', snapshot.health.signals, renderSignal, '현재 표시할 신호가 없습니다.');
           replaceList('artifacts', projectArtifacts, renderArtifact, '발견한 핵심 문서 산출물이 없습니다.');
           replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
           const days = groupByDay(history.timeline);
           element('daily-label').textContent = days.length + ' days';
+          element('tab-daily-count').textContent = String(days.length);
           replaceList('daily', days, renderDay, '날짜별로 묶을 작업 이벤트가 아직 없습니다.');
           replaceList('changes', history.changes, renderChange, '첫 스캔을 기준선으로 저장했습니다. 다음 스캔부터 추가·변경·삭제를 기록합니다.');
+          element('tab-detail-count').textContent = String(history.timeline.length);
           const orderedCycles = [...journey.cycles].sort((left, right) => right.sequence - left.sequence);
           element('cycle-log-label').textContent = orderedCycles.length + ' cycles';
+          element('tab-cycle-count').textContent = String(orderedCycles.length);
           replaceList('cycle-log', orderedCycles, renderCycle, 'beacon cycle start로 첫 Cycle을 시작하면 여기에 시작–완성 로그가 쌓입니다.');
           element('status').textContent = '연결됨';
         } catch {
@@ -541,8 +661,25 @@ export function renderDashboard(): string {
           if (window.location.hash === link.getAttribute('href')) activateView(true);
         });
       });
+      document.querySelectorAll('[data-history-tab]').forEach((button) => {
+        button.addEventListener('click', () => activateHistoryTab(button.dataset.historyTab));
+      });
       window.addEventListener('hashchange', () => activateView(true));
+
+      // 자동 스캔: 켜면 일정 간격으로 다시 스캔해 진행 중 변화를 자동으로 쌓는다.
+      const AUTO_SCAN_INTERVAL_MS = 15000;
+      let autoScanTimer = null;
+      element('auto-scan').addEventListener('change', (event) => {
+        if (event.target.checked) {
+          autoScanTimer = setInterval(() => { if (!document.hidden) loadProject(); }, AUTO_SCAN_INTERVAL_MS);
+        } else if (autoScanTimer) {
+          clearInterval(autoScanTimer);
+          autoScanTimer = null;
+        }
+      });
+
       activateView();
+      activateHistoryTab('daily');
       loadProject();
     </script>
   </body>
