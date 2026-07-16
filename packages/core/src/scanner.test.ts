@@ -167,6 +167,47 @@ test("categorizes common non-conventional commit subjects", () => {
   assert.deepEqual(categories, ["operations", "implementation", "documentation", "issue"]);
 });
 
+test("categorizes more non-conventional subjects while keeping ambiguous ones as change", () => {
+  const cases: Array<[string, TimelineEvent["category"]]> = [
+    ["Remove unused checkout flag", "implementation"],
+    ["Rename product component", "implementation"],
+    ["Move utils into shared package", "implementation"],
+    ["Clean up dead code", "implementation"],
+    ["Simplify pricing logic", "implementation"],
+    ["Bump dependencies to latest", "operations"],
+    ["Upgrade Next.js to 14", "operations"],
+    ["Merge pull request #42 from foo/bar", "operations"],
+    // 의미가 모호한 제목은 그대로 change로 남는다.
+    ["wip", "change"],
+    ["Initial commit", "change"],
+  ];
+
+  const observation: ProjectObservation = {
+    files: { total: 0, source: 0, tests: 0, config: 0, truncated: false, artifacts: [] },
+    git: {
+      isRepository: true,
+      root: "/project",
+      branch: "main",
+      head: "abcdef0",
+      changedFiles: [],
+      recentCommits: cases.map(([subject], index) => ({
+        hash: `feed${index}00000000000`,
+        shortHash: `feed${index}`,
+        authoredAt: `2026-07-15T${String(10 + index).padStart(2, "0")}:00:00.000Z`,
+        subject,
+        paths: ["src/index.ts"],
+      })),
+    },
+  };
+
+  const byReference = new Map(
+    buildProjectTimeline(observation).events.map((event) => [event.title, event.category]),
+  );
+  for (const [subject, expected] of cases) {
+    assert.equal(byReference.get(subject), expected, `${subject} → ${expected}`);
+  }
+});
+
 test("rolls up timeline events into day buckets, newest day first", () => {
   const event = (id: string, occurredAt: string, category: TimelineEvent["category"]): TimelineEvent => ({
     id,

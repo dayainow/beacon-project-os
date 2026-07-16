@@ -66,11 +66,12 @@ Beacon은 다음을 한다.
 - `groupTimelineByDay`를 `scanner.ts`에 순수 함수로 추가(최신 날짜 우선, 날짜별 category 집계, 하루 내 최신 이벤트 우선). 대시보드 히스토리 화면에는 동일 로직의 `groupByDay`와 "일자별 작업" 섹션을 추가.
 - **인수 조건 (충족):** 여러 날짜가 있으면 최신 날짜가 먼저 온다. 각 날짜는 총 건수와 category별 개수를 보여준다. 이벤트가 없으면 빈 롤업/안내로 폴백한다. 실 데이터 실행으로 3일 롤업(7/16 3건·기능 2·검증 1 등) 확인.
 
-### 3순위 — 판정 잔여 오차 정비 (구 PLAN의 B)
-0001에서 남은 판정 오차. 제품 본체가 아니라 정비이므로 언제든 끼워 넣는다.
-- `product`를 파일명 전체 `PRODUCT`일 때만 인정하는 규칙이 실제 PRD(`prd-*.md`)를 누락하지 않는지 확인.
-- Timeline `change` 잔여 4/20이 진짜 분류 불가인지 규칙 보강 여지가 있는지 확인.
-- "5개 Health 기준 중 하나라도 부족 → attention"이 지나치게 보수적인지 실측 검증.
+### 3순위 — 판정 잔여 오차 정비 (구 PLAN의 B) — ✅ 완료 (2026-07-16)
+0001에서 남은 판정 오차 3가지를 검증 질문으로 다뤘다. 각 항목은 실측 후 결론을 냈고, 정직한 판정을 해치지 않는 선에서만 규칙을 보강했다.
+
+- **PRD 누락 규칙 — 변경 없음 (검증 완료).** `artifactKind`는 이미 `prd`를 stem·token 양쪽으로 잡아 `prd-checkout.md`·`PRD.md`·`product-requirements.md`·`requirements-v2.md`·`brief.md`를 모두 `planning`으로 분류한다. 도메인 문서 `product-pdp.md`는 `document`로 남아 오탐도 없다. 실 파일 스캔으로 확인했고, 여기에 손대면 `product-pdp.md` 경계를 되레 무너뜨리므로 변경하지 않는다.
+- **Timeline `change` 잔여 — 규칙 보강.** 명시적 코드 변경 동사(`remove`·`rename`·`move`·`clean`·`simplify`·`handle`·`prevent`·`wire`·`polish` 등)를 `implementation`으로, 의존성·저장소 유지보수 동사(`bump`·`upgrade`·`merge pull request` 등)를 `operations`로 보수적으로 추가했다. `wip`·`Initial commit`처럼 의미가 모호한 제목은 그대로 `change`로 남겨 정직성을 지켰다. 테스트로 양쪽(분류/유지)을 고정했다.
+- **attention 보수성 — 변경 없음 (설계상 정당).** "5개 기준 중 하나라도 부족 → attention"은 빠진 부분을 숨기지 않고 드러내려는 의도된 규칙이다. 이를 완화하면 목적("뭐가 빠졌는지 알 수 있고")과 원칙("점수만 올리는 변경은 목적이 아니다")에 어긋나므로 유지한다.
 
 ### 보류 — 평가 대상 확장 (구 PLAN의 A)
 문서 없는 초기 프로젝트·monorepo·비-JS로 scanner 편향을 노출하는 트랙. 제품 시간 축이 닫힌 뒤 별도 외부 평가 사이클(`0002-*.md`)로 진행한다.
