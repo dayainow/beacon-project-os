@@ -186,6 +186,13 @@ export interface ProjectTimeline {
   truncated: boolean;
 }
 
+export interface TimelineDay {
+  date: string;
+  total: number;
+  categoryCounts: Partial<Record<TimelineCategory, number>>;
+  events: TimelineEvent[];
+}
+
 export interface ProjectSnapshot {
   scannedAt: string;
   observation: ProjectObservation;
@@ -622,6 +629,31 @@ export function buildProjectTimeline(observation: ProjectObservation): ProjectTi
     total: allEvents.length,
     truncated: allEvents.length > MAX_TIMELINE_EVENTS,
   };
+}
+
+export function groupTimelineByDay(events: TimelineEvent[]): TimelineDay[] {
+  const buckets = new Map<string, TimelineEvent[]>();
+  for (const event of events) {
+    // ISO 시각의 UTC 날짜 부분을 하루 단위 키로 쓴다.
+    const date = event.occurredAt.slice(0, 10);
+    const bucket = buckets.get(date);
+    if (bucket) bucket.push(event);
+    else buckets.set(date, [event]);
+  }
+
+  return [...buckets.entries()]
+    .sort(([left], [right]) => right.localeCompare(left))
+    .map(([date, dayEvents]) => {
+      const ordered = [...dayEvents].sort((left, right) => {
+        const timeDifference = Date.parse(right.occurredAt) - Date.parse(left.occurredAt);
+        return timeDifference || left.id.localeCompare(right.id);
+      });
+      const categoryCounts: Partial<Record<TimelineCategory, number>> = {};
+      for (const event of ordered) {
+        categoryCounts[event.category] = (categoryCounts[event.category] ?? 0) + 1;
+      }
+      return { date, total: ordered.length, categoryCounts, events: ordered };
+    });
 }
 
 export async function scanProject(root: string, now = new Date()): Promise<ProjectSnapshot> {

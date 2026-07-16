@@ -24,6 +24,8 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /Cycle 로그/);
   assert.match(script, /renderCycle/);
+  assert.match(dashboard, /일자별 작업/);
+  assert.match(script, /groupByDay/);
   assert.match(dashboard, /Append-only Activity/);
   assert.match(dashboard, /P0–P4 Process/);
   assert.match(dashboard, /Gate 준비도/);

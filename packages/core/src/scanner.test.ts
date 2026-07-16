@@ -3,7 +3,14 @@ import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { buildProjectTimeline, evaluateProjectHealth, scanProject, type ProjectObservation } from "./scanner.js";
+import {
+  buildProjectTimeline,
+  evaluateProjectHealth,
+  groupTimelineByDay,
+  scanProject,
+  type ProjectObservation,
+  type TimelineEvent,
+} from "./scanner.js";
 
 test("explains missing project foundations with evidence and next actions", () => {
   const observation: ProjectObservation = {
@@ -158,4 +165,43 @@ test("categorizes common non-conventional commit subjects", () => {
 
   const categories = buildProjectTimeline(observation).events.map((event) => event.category);
   assert.deepEqual(categories, ["operations", "implementation", "documentation", "issue"]);
+});
+
+test("rolls up timeline events into day buckets, newest day first", () => {
+  const event = (id: string, occurredAt: string, category: TimelineEvent["category"]): TimelineEvent => ({
+    id,
+    type: "commit",
+    category,
+    occurredAt,
+    title: id,
+    detail: "",
+    source: "git",
+    reference: id,
+    relatedArtifacts: [],
+  });
+
+  const days = groupTimelineByDay([
+    event("a", "2026-07-16T09:00:00.000Z", "implementation"),
+    event("b", "2026-07-16T15:00:00.000Z", "quality"),
+    event("c", "2026-07-16T11:00:00.000Z", "implementation"),
+    event("d", "2026-07-14T08:00:00.000Z", "planning"),
+  ]);
+
+  assert.equal(days.length, 2);
+  // 최신 날짜가 먼저 온다.
+  assert.equal(days[0].date, "2026-07-16");
+  assert.equal(days[1].date, "2026-07-14");
+
+  // 같은 날 이벤트가 묶이고 최신 이벤트가 먼저 온다.
+  assert.equal(days[0].total, 3);
+  assert.deepEqual(days[0].events.map((item) => item.id), ["b", "c", "a"]);
+  assert.deepEqual(days[0].categoryCounts, { implementation: 2, quality: 1 });
+
+  assert.equal(days[1].total, 1);
+  assert.deepEqual(days[1].events.map((item) => item.id), ["d"]);
+  assert.deepEqual(days[1].categoryCounts, { planning: 1 });
+});
+
+test("returns an empty rollup for no events", () => {
+  assert.deepEqual(groupTimelineByDay([]), []);
 });
