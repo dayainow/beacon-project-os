@@ -138,6 +138,17 @@ Project Identity + 현재 Snapshot + append-only History
 → Dashboard에서 현재 Cycle과 시작 상태 표시
 ```
 
+#### Cycle 정의 — 마일스톤 단위
+
+**하나의 Cycle은 "완결되는 목표 하나(마일스톤)"다.** 스프린트처럼 정해진 기간으로 끊지 않고, 목표가 손에 잡히는 결과물로 완결될 때까지를 한 Cycle로 본다.
+
+- **시작:** 새 목표에 착수할 때 `beacon cycle start "이름" --goal "이번에 완성할 것"`.
+- **종료:** 그 목표의 결과물이 나왔을 때 `beacon cycle complete --summary "무엇을 이뤘나"`. 시작 기준선과 비교한 성과(산출물·commit·Health·Gate 변화)가 자동으로 남는다.
+- **크기 기준:** 며칠~2주 안에 "됐다"고 말할 수 있는 크기. 너무 크면(몇 달) 여러 Cycle로 쪼개고, 너무 작으면(단일 commit) 합친다.
+- **계층:** Cycle(=마일스톤/에픽)만 사람이 정의한다. 그 아래 개별 변경(이슈·태스크)은 Git commit과 파일 변화로 Timeline·History에 자동으로 채워지므로 수동 입력하지 않는다.
+
+예: `"B2C 대출 기능 MVP"`는 여러 파일·commit이 모여 하나로 완결되는 좋은 Cycle이다. `"버튼 색 변경"`은 너무 작고(그냥 commit), `"서비스 전체 개발"`은 너무 크다(여러 Cycle).
+
 #### 인수 조건
 
 - `beacon cycle start "이름" --goal "목표"`로 하나의 진행 중 Cycle을 시작한다.
