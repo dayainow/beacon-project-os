@@ -143,6 +143,21 @@ export function renderDashboard(): string {
       .artifact-row, .timeline-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
       .artifact-kind { color: #5b43ff; font-size: 10px; font-weight: 800; text-transform: uppercase; }
       .artifact-path { margin-top: 5px; color: #858892; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+      .agroup { border-top: 1px solid #ececef; }
+      .agroup:first-child { border-top: 0; }
+      .agroup-head { display: flex; align-items: center; gap: 10px; padding: 14px 24px 8px; }
+      .agroup-name { font-size: 14px; font-weight: 800; letter-spacing: -.01em; }
+      .agroup-stage { font-size: 10px; font-weight: 800; color: #5b43ff; background: #f0edff; padding: 3px 8px; border-radius: 6px; letter-spacing: .03em; }
+      .agroup-count { margin-left: auto; font-size: 11px; font-weight: 800; color: #9296a0; font-variant-numeric: tabular-nums; }
+      .agroup-empty { padding: 4px 24px 14px; color: #b0b4bc; font-size: 12.5px; }
+      .afile { display: flex; align-items: baseline; gap: 12px; padding: 9px 24px; border-top: 1px solid #f4f4f7; }
+      .afile-name { font-size: 13.5px; font-weight: 700; flex: none; }
+      .afile-path { color: #9296a0; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; margin-left: auto; text-align: right; }
+      .support-wrap { border-top: 1px solid #ececef; margin-top: 4px; }
+      .support-wrap > summary { list-style: none; cursor: pointer; padding: 14px 24px; color: #777b85; font-size: 12.5px; font-weight: 700; user-select: none; }
+      .support-wrap > summary::-webkit-details-marker { display: none; }
+      .support-wrap > summary::before { content: '▸ '; color: #b0b4bc; }
+      .support-wrap[open] > summary::before { content: '▾ '; }
       .timeline-side { display: grid; justify-items: end; gap: 7px; }
       .timeline-category { border-radius: 999px; padding: 5px 8px; background: #f2efff; color: #5b43ff; font-size: 10px; font-weight: 850; white-space: nowrap; }
       .timeline-meta { color: #8a8d95; font-size: 11px; white-space: nowrap; }
@@ -287,8 +302,10 @@ export function renderDashboard(): string {
 
         <div class="view" id="view-artifacts" data-view-panel="artifacts" hidden>
           <section class="card panel">
-            <div class="panel-head"><div><div class="eyebrow">Deliverables</div><h2>발견한 산출물</h2></div><span class="count" id="artifact-label">0 files</span></div>
-            <ul class="list" id="artifacts"><li class="empty">산출물을 찾고 있습니다.</li></ul>
+            <div class="panel-head"><div><div class="eyebrow">문서</div><h2>프로젝트 문서 모아보기</h2></div><span class="count" id="artifact-label">확인 중</span></div>
+            <p class="panel-hint">종류별로 묶어 보여줍니다. 각 종류가 어느 단계(P0~P4)의 근거인지 함께 표시됩니다.</p>
+            <div id="artifact-groups"></div>
+            <div id="artifact-support"></div>
           </section>
         </div>
 
@@ -447,15 +464,47 @@ export function renderDashboard(): string {
         ready.forEach((signal) => readyBox.append(renderReadySignal(signal)));
       }
 
-      function renderArtifact(artifact) {
-        const item = text('li', 'list-item', '');
-        const row = text('div', 'artifact-row', '');
-        const content = text('div', '', '');
-        content.append(text('p', 'artifact-name', artifact.name), text('div', 'artifact-path', artifact.path));
-        const scope = artifact.scope === 'support' ? '지원' : '핵심';
-        row.append(content, text('span', 'artifact-kind', (kindLabels[artifact.kind] || '문서') + ' · ' + scope));
-        item.append(row);
-        return item;
+      const artifactKindOrder = ['overview', 'planning', 'architecture', 'quality', 'release', 'document'];
+      const artifactKindStage = { overview: 'P0', planning: 'P0', architecture: 'P1', quality: 'P3', release: 'P4', document: null };
+
+      function renderArtifactFile(artifact) {
+        const row = text('div', 'afile', '');
+        row.append(text('span', 'afile-name', artifact.name), text('span', 'afile-path', artifact.path));
+        return row;
+      }
+
+      function renderArtifacts(projectArtifacts, supportArtifacts) {
+        const groups = element('artifact-groups');
+        groups.replaceChildren();
+        const byKind = {};
+        projectArtifacts.forEach((a) => { (byKind[a.kind] = byKind[a.kind] || []).push(a); });
+
+        artifactKindOrder.forEach((kind) => {
+          const files = byKind[kind] || [];
+          // 문서(document)는 실제로 있을 때만 그룹을 만든다.
+          if (kind === 'document' && files.length === 0) return;
+          const group = text('div', 'agroup', '');
+          const head = text('div', 'agroup-head', '');
+          head.append(text('span', 'agroup-name', kindLabels[kind] || '문서'));
+          if (artifactKindStage[kind]) head.append(text('span', 'agroup-stage', artifactKindStage[kind] + ' 근거'));
+          head.append(text('span', 'agroup-count', files.length + '개'));
+          group.append(head);
+          if (files.length === 0) {
+            group.append(text('div', 'agroup-empty', '아직 없어요.'));
+          } else {
+            files.forEach((a) => group.append(renderArtifactFile(a)));
+          }
+          groups.append(group);
+        });
+
+        const supportBox = element('artifact-support');
+        supportBox.replaceChildren();
+        if (supportArtifacts.length > 0) {
+          const details = text('details', 'support-wrap', '');
+          details.append(text('summary', '', '도구·설정 문서 ' + supportArtifacts.length + '개 (판정에는 쓰지 않음)'));
+          supportArtifacts.forEach((a) => details.append(renderArtifactFile(a)));
+          supportBox.append(details);
+        }
       }
 
       function renderTimelineEvent(event) {
@@ -672,10 +721,10 @@ export function renderDashboard(): string {
           renderProcess(snapshot.process);
 
           renderSignals(snapshot.health.signals);
-          element('artifact-label').textContent = projectArtifacts.length + ' 핵심 · ' + supportArtifacts.length + ' 지원';
+          element('artifact-label').textContent = '핵심 ' + projectArtifacts.length + '개 · 지원 ' + supportArtifacts.length + '개';
           element('timeline-label').textContent = history.timeline.length + (history.timeline.length < history.timelineCount ? ' / ' + history.timelineCount : '') + ' events';
           element('change-label').textContent = history.changes.length + (history.changes.length < history.changeCount ? ' / ' + history.changeCount : '') + ' changes';
-          replaceList('artifacts', projectArtifacts, renderArtifact, '발견한 핵심 문서 산출물이 없습니다.');
+          renderArtifacts(projectArtifacts, supportArtifacts);
           replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
           const days = groupByDay(history.timeline);
           element('daily-label').textContent = days.length + ' days';

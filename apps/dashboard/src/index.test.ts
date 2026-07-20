@@ -45,6 +45,8 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(dashboard, /기획부터 배포까지/);
   assert.match(script, /renderProcess/);
   assert.match(dashboard, /id="progress-fill"/);
+  assert.match(script, /renderArtifacts/);
+  assert.match(dashboard, /id="artifact-groups"/);
   assert.match(dashboard, /핵심 산출물/);
   assert.match(dashboard, /지원 문서/);
   assert.doesNotMatch(script, /innerHTML|insertAdjacentHTML|document\.write/);
