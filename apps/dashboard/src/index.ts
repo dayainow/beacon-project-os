@@ -72,25 +72,38 @@ export function renderDashboard(): string {
       .health-card.attention { border-left-color: #f0a100; }
       .health-card.at_risk { border-left-color: #df4b57; }
       .process { overflow: hidden; }
-      .stage-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding: 20px 24px; }
-      .stage { min-height: 116px; border: 1px solid #e2e3e6; border-radius: 13px; padding: 15px; background: #fafafa; }
+      .progress-wrap { display: flex; align-items: center; gap: 14px; padding: 18px 24px 4px; }
+      .progress-track { flex: 1; height: 8px; border-radius: 999px; background: #eceef2; overflow: hidden; }
+      .progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #7c6cff, #5b43ff); transition: width .5s ease; width: 0; }
+      .progress-text { font-size: 12px; font-weight: 800; color: #5b43ff; white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .stage-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding: 18px 24px; }
+      .stage { position: relative; min-height: 132px; border: 1px solid #e2e3e6; border-radius: 13px; padding: 15px; background: #fafafa; display: flex; flex-direction: column; }
       .stage.ready { border-color: #bdebd7; background: #effbf5; }
-      .stage.current { border-color: #8f7fff; background: #f6f3ff; box-shadow: inset 0 0 0 1px #8f7fff; }
-      .stage-code { color: #777b85; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; }
-      .stage-name { display: block; margin-top: 9px; font-size: 15px; }
-      .stage-state { display: block; margin-top: 16px; color: #777b85; font-size: 11px; }
+      .stage.current { border-color: #8f7fff; background: #f6f3ff; box-shadow: 0 0 0 1px #8f7fff, 0 8px 22px rgb(91 67 255 / 12%); }
+      .stage-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .stage-code { color: #9296a0; font: 700 10px ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; letter-spacing: .04em; }
+      .stage-icon { width: 18px; height: 18px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 11px; font-weight: 800; border: 1.5px solid #cfd2d8; color: #b0b4bc; }
+      .stage.ready .stage-icon { background: #13a76f; border-color: #13a76f; color: #fff; }
+      .stage.current .stage-icon { background: #5b43ff; border-color: #5b43ff; color: #fff; }
+      .stage-name { display: block; margin-top: 10px; font-size: 15px; font-weight: 800; }
+      .stage-hint { display: block; margin-top: 5px; color: #8a8d95; font-size: 11px; line-height: 1.45; }
+      .stage-state { display: block; margin-top: auto; padding-top: 12px; color: #9296a0; font-size: 11px; font-weight: 700; }
       .stage.ready .stage-state { color: #08764d; }
       .stage.current .stage-state { color: #5b43ff; font-weight: 800; }
       .gate-focus { border-top: 1px solid #ececef; padding: 20px 24px 24px; background: #fcfcfd; }
-      .gate-focus h3 { margin: 6px 0 4px; font-size: 17px; }
-      .gate-objective { margin: 0; color: #777b85; font-size: 12px; }
+      .gate-focus h3 { margin: 6px 0 4px; font-size: 18px; letter-spacing: -.02em; }
+      .gate-eyebrow-current { color: #5b43ff; }
+      .gate-objective { margin: 0; color: #777b85; font-size: 13px; line-height: 1.5; }
+      .gate-foot { margin: 16px 0 0; color: #a0a3ab; font-size: 11px; line-height: 1.5; }
       .requirements { display: grid; gap: 8px; margin-top: 16px; }
-      .requirement { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 12px; border: 1px solid #e4e5e8; background: #fff; border-radius: 10px; }
-      .requirement-dot { width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: #df4b57; }
-      .requirement.satisfied .requirement-dot { background: #13a76f; }
-      .requirement-title { margin: 0; font-size: 13px; font-weight: 800; }
-      .requirement-evidence { margin: 4px 0 0; color: #777b85; font-size: 11px; line-height: 1.45; }
-      .requirement-action { color: #5b43ff; font-size: 11px; text-align: right; max-width: 270px; }
+      .requirement { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 11px; align-items: start; padding: 13px 14px; border: 1px solid #e4e5e8; background: #fff; border-radius: 11px; }
+      .requirement.satisfied { border-color: #cdeeda; background: #fbfefc; }
+      .requirement-dot { width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: #fdecec; color: #d64550; }
+      .requirement.satisfied .requirement-dot { background: #e7f6ef; color: #0f9d6a; }
+      .requirement-title { margin: 0; font-size: 13.5px; font-weight: 800; }
+      .requirement-evidence { margin: 4px 0 0; color: #777b85; font-size: 11.5px; line-height: 1.45; }
+      .requirement-action { color: #5b43ff; font-size: 11.5px; line-height: 1.5; text-align: right; max-width: 290px; }
+      .requirement.satisfied .requirement-action { color: #0f9d6a; font-weight: 700; }
       .layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 12px; }
       .panel { overflow: hidden; }
       .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 24px 18px; border-bottom: 1px solid #ececef; }
@@ -109,7 +122,9 @@ export function renderDashboard(): string {
       .badge.modified { background: #fff7df; color: #9a6200; }
       .badge.deleted { background: #fff0f1; color: #bd2736; }
       .signal-detail { margin: 7px 0 0; color: #666a73; font-size: 13px; line-height: 1.55; }
-      .next-action { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
+      .next-action { display: flex; flex-direction: column; gap: 5px; margin: 12px 0 0; padding: 11px 13px; border-radius: 10px; background: #f5f3ff; color: #453a78; font-size: 13px; line-height: 1.55; }
+      .next-action-label { align-self: flex-start; font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #6b5bd6; background: #e7e2ff; padding: 3px 8px; border-radius: 6px; }
+      .signal-clear { display: flex; align-items: center; gap: 10px; margin: 4px 24px 16px; padding: 16px 18px; border-radius: 12px; background: #eefaf3; border: 1px solid #cdeeda; color: #0a6b47; font-size: 14px; font-weight: 700; }
       .signal-summary { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 24px; border-bottom: 1px solid #ececef; }
       .summary-pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; }
       .summary-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
@@ -117,8 +132,8 @@ export function renderDashboard(): string {
       .summary-pill.attention { background: #fff7df; color: #9a6200; } .summary-pill.attention .dot { background: #f0a100; }
       .summary-pill.ready { background: #eaf9f2; color: #08764d; } .summary-pill.ready .dot { background: #13a76f; }
       .group-label { padding: 16px 24px 4px; color: #8a8d95; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-      .list-item.attend { border-left: 3px solid #f0a100; }
-      .list-item.attend.is-warning { border-left-color: #df4b57; }
+      .list-item.attend { border-left: 3px solid #f0a100; background: linear-gradient(90deg, #fffdf6 0%, transparent 40%); }
+      .list-item.attend.is-warning { border-left-color: #df4b57; background: linear-gradient(90deg, #fff8f8 0%, transparent 40%); }
       .signal-ready { display: flex; align-items: center; gap: 11px; padding: 13px 24px; border-bottom: 1px solid #f2f2f5; }
       .signal-ready:last-child { border-bottom: 0; }
       .signal-ready .dot { width: 9px; height: 9px; border-radius: 50%; background: #13a76f; flex: none; }
@@ -170,7 +185,7 @@ export function renderDashboard(): string {
         <nav class="navigation" aria-label="프로젝트 화면">
           <a class="nav-link" href="#overview" data-view-link="overview" aria-current="page">
             <span class="nav-name">개요</span><span class="nav-count" id="nav-overview-count">—</span>
-            <span class="nav-description">현재 Cycle과 다음 행동</span>
+            <span class="nav-description">현재 Cycle과 점검 결과</span>
           </a>
           <a class="nav-link" href="#process" data-view-link="process">
             <span class="nav-name">단계</span><span class="nav-count" id="nav-process-count">—</span>
@@ -197,7 +212,7 @@ export function renderDashboard(): string {
           <div>
             <div class="brand">Project Workspace</div>
             <h1 id="page-title">프로젝트 개요</h1>
-            <p class="page-description" id="page-description">현재 Cycle과 프로젝트의 중요한 신호를 확인합니다.</p>
+            <p class="page-description" id="page-description">현재 Cycle과 프로젝트 점검 결과를 확인합니다.</p>
           </div>
           <div class="header-actions">
             <div class="status" id="status">프로젝트 확인 중</div>
@@ -246,24 +261,26 @@ export function renderDashboard(): string {
           </section>
 
           <section class="card panel">
-            <div class="panel-head"><div><div class="eyebrow">Beacon Signals</div><h2>부족한 부분과 다음 행동</h2></div><span class="count" id="signal-count">0 signals</span></div>
+            <div class="panel-head"><div><div class="eyebrow">Checklist</div><h2>프로젝트 점검</h2></div><span class="count" id="signal-count">확인 중</span></div>
             <div class="signal-summary" id="signal-summary"></div>
-            <div class="group-label" id="attend-label" hidden>먼저 볼 것 · 확인이 필요한 신호</div>
+            <div class="group-label" id="attend-label" hidden>먼저 챙길 것</div>
             <ul class="list" id="signals-attend"></ul>
-            <div class="group-label" id="ready-label" hidden>준비된 기준</div>
+            <div class="group-label" id="ready-label" hidden>잘 갖춰진 것</div>
             <div id="signals-ready"></div>
           </section>
         </div>
 
         <div class="view" id="view-process" data-view-panel="process" hidden>
           <section class="card process">
-            <div class="panel-head"><div><div class="eyebrow">P0–P4 Process</div><h2>단계와 Gate 준비도</h2></div><span class="count" id="process-count">0 / 5 ready</span></div>
+            <div class="panel-head"><div><div class="eyebrow">진행 단계</div><h2>기획부터 배포까지, 지금 어디까지</h2></div><span class="count" id="process-count">확인 중</span></div>
+            <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><span class="progress-text" id="progress-text">—</span></div>
             <div class="stage-grid" id="stages"></div>
             <div class="gate-focus">
-              <div class="eyebrow">Current Gate</div>
-              <h3 id="gate-title">단계 근거를 확인하고 있습니다.</h3>
+              <div class="eyebrow" id="gate-eyebrow">지금 확인할 단계</div>
+              <h3 id="gate-title">단계를 확인하고 있어요.</h3>
               <p class="gate-objective" id="gate-objective"></p>
               <div class="requirements" id="requirements"></div>
+              <p class="gate-foot">자동 관찰 결과일 뿐, 사람의 최종 판단(GO·HOLD·KILL)을 대신하지 않습니다.</p>
             </div>
           </section>
         </div>
@@ -317,12 +334,19 @@ export function renderDashboard(): string {
     <script>
       const element = (id) => document.getElementById(id);
       const kindLabels = { overview: '개요', planning: '기획', architecture: '설계', quality: '검증', release: '릴리스', document: '문서' };
-      const levelLabels = { warning: '보완 필요', attention: '확인 필요', ready: '준비됨' };
+      const levelLabels = { warning: '보완 권장', attention: '확인 권장', ready: '완료' };
       const categoryLabels = { planning: '기획', design: '설계', implementation: '기능', issue: '문제 해결', quality: '검증', delivery: '릴리스', operations: '운영', documentation: '문서', change: '변경' };
       const changeLabels = { added: '추가', modified: '변경', deleted: '삭제' };
-      const stageStateLabels = { ready: '자동 근거 준비', current: '현재 확인 단계', upcoming: '후속 단계' };
+      const stageStateLabels = { ready: '준비됨', current: '지금 여기', upcoming: '아직' };
+      const stageHints = {
+        p0: '루트 README와 기획 문서',
+        p1: '설계·구조 문서 (ADR 등)',
+        p2: '구현 소스와 commit 이력',
+        p3: '테스트 또는 검증 문서',
+        p4: 'CHANGELOG·릴리스 문서',
+      };
       const views = {
-        overview: { title: '프로젝트 개요', description: '현재 Cycle과 프로젝트의 중요한 신호를 확인합니다.' },
+        overview: { title: '프로젝트 개요', description: '현재 Cycle과 프로젝트 점검 결과를 확인합니다.' },
         process: { title: '단계와 Gate', description: 'P0–P4 단계별 준비 근거와 다음 행동을 확인합니다.' },
         artifacts: { title: '프로젝트 산출물', description: '파일에서 자동으로 발견한 핵심 결과물을 확인합니다.' },
         history: { title: '프로젝트 히스토리', description: '작업의 의미 흐름과 스캔 사이의 변화를 확인합니다.' },
@@ -377,8 +401,10 @@ export function renderDashboard(): string {
         const top = text('div', 'signal-top', '');
         top.append(text('p', 'signal-title', signal.title), text('span', 'badge ' + signal.level, levelLabels[signal.level]));
         item.append(top, text('p', 'signal-detail', signal.detail));
-        item.append(text('p', 'next-action', '다음 행동 · ' + signal.nextAction));
-        item.append(text('div', 'source', '출처 · ' + signal.sources.join(', ')));
+        const action = text('p', 'next-action', '');
+        action.append(text('span', 'next-action-label', '이렇게 해보세요'), text('span', '', signal.nextAction));
+        item.append(action);
+        item.append(text('div', 'source', '근거 · ' + signal.sources.join(', ')));
         return item;
       }
 
@@ -396,11 +422,13 @@ export function renderDashboard(): string {
         const counts = { warning: 0, attention: 0, ready: ready.length };
         attend.forEach((signal) => { counts[signal.level] = (counts[signal.level] || 0) + 1; });
 
-        element('signal-count').textContent = attend.length > 0 ? attend.length + '개 확인 필요' : '모두 준비됨';
+        element('signal-count').textContent = attend.length > 0
+          ? attend.length + '개 챙기면 완성'
+          : '기본 점검 통과 ✓';
 
         const summary = element('signal-summary');
         summary.replaceChildren();
-        [['warning', '보완 필요'], ['attention', '확인 필요'], ['ready', '준비됨']].forEach(([level, label]) => {
+        [['warning', '보완 권장'], ['attention', '확인 권장'], ['ready', '완료']].forEach(([level, label]) => {
           if (!counts[level]) return;
           const pill = text('span', 'summary-pill ' + level, '');
           pill.append(text('span', 'dot', ''), text('span', '', label + ' ' + counts[level]));
@@ -410,7 +438,7 @@ export function renderDashboard(): string {
         element('attend-label').hidden = attend.length === 0;
         const attendList = element('signals-attend');
         attendList.replaceChildren();
-        if (attend.length === 0) attendList.append(text('li', 'empty', '지금 확인이 필요한 신호가 없습니다. 기본 기준이 모두 준비되어 있습니다.'));
+        if (attend.length === 0) attendList.append(text('li', 'signal-clear', '지금 챙길 것이 없어요. 기본 점검을 모두 통과했습니다. 👍'));
         else attend.forEach((signal) => attendList.append(renderSignal(signal)));
 
         element('ready-label').hidden = ready.length === 0;
@@ -538,8 +566,12 @@ export function renderDashboard(): string {
 
       function renderStage(stage) {
         const item = text('div', 'stage ' + stage.state, '');
-        item.append(text('span', 'stage-code', stage.id));
+        const top = text('div', 'stage-top', '');
+        const iconChar = stage.state === 'ready' ? '✓' : stage.state === 'current' ? '●' : '';
+        top.append(text('span', 'stage-code', stage.id.toUpperCase()), text('span', 'stage-icon', iconChar));
+        item.append(top);
         item.append(text('strong', 'stage-name', stage.name));
+        item.append(text('span', 'stage-hint', stageHints[stage.id] || ''));
         item.append(text('span', 'stage-state', stageStateLabels[stage.state] + ' · ' + stage.gate.satisfiedRequirements + '/' + stage.gate.totalRequirements));
         return item;
       }
@@ -549,21 +581,29 @@ export function renderDashboard(): string {
         const content = text('div', '', '');
         content.append(text('p', 'requirement-title', requirement.label));
         content.append(text('p', 'requirement-evidence', requirement.evidence.join(' · ')));
-        item.append(text('span', 'requirement-dot', ''), content);
-        item.append(text('span', 'requirement-action', requirement.satisfied ? '근거 확인됨' : requirement.nextAction));
+        item.append(text('span', 'requirement-dot', requirement.satisfied ? '✓' : '!'), content);
+        item.append(text('span', 'requirement-action', requirement.satisfied ? '확인됨' : requirement.nextAction));
         return item;
       }
 
       function renderProcess(process) {
         const stages = element('stages');
         stages.replaceChildren(...process.stages.map(renderStage));
-        element('process-count').textContent = process.readyStages + ' / ' + process.totalStages + ' ready';
+
+        const done = process.readyStages;
+        element('process-count').textContent = process.totalStages + '단계 중 ' + done + '단계 완료';
+        element('progress-fill').style.width = Math.round((done / process.totalStages) * 100) + '%';
+        element('progress-text').textContent = done + ' / ' + process.totalStages;
+
         const focus = process.stages.find((stage) => stage.id === process.currentStageId) || process.stages.at(-1);
         if (!focus) return;
-        element('gate-title').textContent = process.currentStageId
-          ? focus.id.toUpperCase() + ' ' + focus.name + ' Gate · 증거 확인 필요'
-          : 'P0–P4 자동 근거가 모두 준비되었습니다';
-        element('gate-objective').textContent = focus.objective + ' 자동 관찰 결과이며 Gate 승인을 대신하지 않습니다.';
+        const isCurrent = Boolean(process.currentStageId);
+        element('gate-eyebrow').textContent = isCurrent ? '지금 확인할 단계' : '모든 단계 준비 완료';
+        element('gate-eyebrow').className = 'eyebrow' + (isCurrent ? ' gate-eyebrow-current' : '');
+        element('gate-title').textContent = isCurrent
+          ? focus.id.toUpperCase() + ' · ' + focus.name + ' — 여기부터 채우면 다음 단계로 넘어가요'
+          : '기획부터 배포까지 자동 근거가 모두 준비됐어요 🎉';
+        element('gate-objective').textContent = focus.objective;
         const requirements = element('requirements');
         requirements.replaceChildren(...focus.gate.requirements.map(renderRequirement));
       }
