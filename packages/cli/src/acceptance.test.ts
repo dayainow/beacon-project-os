@@ -302,9 +302,9 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.equal(dashboardResponse.status, 200);
   const dashboard = await dashboardResponse.text();
   assert.match(dashboard, /Project Identity/);
-  assert.match(dashboard, /Beacon Signals/);
-  assert.match(dashboard, /P0–P4 Process/);
-  assert.match(dashboard, /Gate 준비도/);
+  assert.match(dashboard, /프로젝트 점검/);
+  assert.match(dashboard, /진행 단계/);
+  assert.match(dashboard, /기획부터 배포까지/);
   assert.match(dashboard, /Project Timeline/);
   assert.match(dashboard, /Append-only Activity/);
   assert.match(dashboard, /Project Journey/);
