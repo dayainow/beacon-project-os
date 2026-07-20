@@ -218,14 +218,29 @@ function artifactKind(relativePath: string): ArtifactKind {
   const stem = name.replace(/\.[^.]+$/, "");
   const tokens = lower.split(/[\/\-_.\s]+/).filter(Boolean);
 
+  // 한국어 파일명은 접미사가 붙어 한 토큰이 되는 경우가 많다(예: 기획안, 설계서).
+  // 영어는 구분자로 단어가 나뉘므로 정확 일치를 유지하되, 한국어 어근은 부분 문자열로 잡는다.
+  const hasKoreanRoot = (...roots: string[]) =>
+    tokens.some((token) => roots.some((root) => token.includes(root)));
+
   if (/^readme(?:\.|$)/.test(name)) return "overview";
   if (
     ["prd", "product", "requirement", "requirements", "brief", "plan", "planning", "기획", "요구사항"].includes(stem)
-    || tokens.some((token) => ["prd", "requirement", "requirements", "brief", "planning", "기획", "요구사항"].includes(token))
+    || tokens.some((token) => ["prd", "requirement", "requirements", "brief", "planning"].includes(token))
+    || hasKoreanRoot("기획", "요구사항")
   ) return "planning";
-  if (tokens.some((token) => ["adr", "architecture", "design", "system", "설계"].includes(token))) return "architecture";
-  if (tokens.some((token) => ["test", "tests", "qa", "quality", "validation", "검증"].includes(token))) return "quality";
-  if (tokens.some((token) => ["changelog", "release", "releases", "릴리스"].includes(token))) return "release";
+  if (
+    tokens.some((token) => ["adr", "architecture", "design", "system"].includes(token))
+    || hasKoreanRoot("설계")
+  ) return "architecture";
+  if (
+    tokens.some((token) => ["test", "tests", "qa", "quality", "validation"].includes(token))
+    || hasKoreanRoot("검증")
+  ) return "quality";
+  if (
+    tokens.some((token) => ["changelog", "release", "releases"].includes(token))
+    || hasKoreanRoot("릴리스")
+  ) return "release";
   return "document";
 }
 

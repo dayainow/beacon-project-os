@@ -138,6 +138,31 @@ test("keeps automation docs visible without using them as project gate evidence"
   assert.equal(snapshot.process.currentStageId, "p0");
 });
 
+test("classifies common Korean document names by their root keyword", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "beacon-korean-"));
+  await mkdir(path.join(root, "docs"), { recursive: true });
+  await writeFile(path.join(root, "README.md"), "# 소개\n", "utf8");
+  const files: Array<[string, string]> = [
+    ["docs/기획안.md", "planning"],
+    ["docs/기획서.md", "planning"],
+    ["docs/요구사항서.md", "planning"],
+    ["docs/설계서.md", "architecture"],
+    ["docs/시스템설계문서.md", "architecture"],
+    ["docs/검증계획.md", "quality"],
+    ["docs/릴리스노트.md", "release"],
+    ["docs/회의록.md", "document"],
+  ];
+  for (const [filePath] of files) {
+    await writeFile(path.join(root, filePath), "# 문서\n", "utf8");
+  }
+
+  const snapshot = await scanProject(root, new Date("2026-07-20T10:00:00.000Z"));
+  const byPath = new Map(snapshot.observation.files.artifacts.map((artifact) => [artifact.path, artifact.kind]));
+  for (const [filePath, expected] of files) {
+    assert.equal(byPath.get(filePath), expected, `${filePath} → ${expected}`);
+  }
+});
+
 test("categorizes common non-conventional commit subjects", () => {
   const subjects = [
     "Fix checkout retry handling (#10)",
