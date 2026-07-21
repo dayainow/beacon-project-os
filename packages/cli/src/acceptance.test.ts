@@ -301,13 +301,13 @@ test("beacon init → beacon open → project identity", async (context) => {
   const dashboardResponse = await fetch(url);
   assert.equal(dashboardResponse.status, 200);
   const dashboard = await dashboardResponse.text();
-  assert.match(dashboard, /Project Identity/);
+  assert.match(dashboard, /프로젝트 정보/);
   assert.match(dashboard, /프로젝트 점검/);
   assert.match(dashboard, /진행 단계/);
   assert.match(dashboard, /기획부터 배포까지/);
   assert.match(dashboard, /작업 하나하나/);
   assert.match(dashboard, /스캔 사이에 바뀐 것/);
-  assert.match(dashboard, /Project Journey/);
+  assert.match(dashboard, /현재 마일스톤/);
   assert.match(dashboard, /data-view-link="overview"/);
   assert.match(dashboard, /data-view-link="process"/);
   assert.match(dashboard, /data-view-link="artifacts"/);
