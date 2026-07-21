@@ -318,31 +318,31 @@ export function renderDashboard(): string {
 
           <div class="history-panel" data-history-panel="daily">
             <section class="card panel daily">
-              <div class="panel-head"><div><div class="eyebrow">Daily Activity</div><h2>일자별 작업</h2></div><span class="count" id="daily-label">0 days</span></div>
-              <p class="panel-hint">하루 단위로 무엇을, 몇 건 했는지 묶어 보여줍니다.</p>
-              <ul class="list" id="daily"><li class="empty">날짜별로 묶을 작업 이벤트가 아직 없습니다.</li></ul>
+              <div class="panel-head"><div><div class="eyebrow">일자별</div><h2>날짜별로 한 일</h2></div><span class="count" id="daily-label">—</span></div>
+              <p class="panel-hint">하루 단위로 무엇을 몇 건 했는지 묶어 보여줍니다. 날짜를 펼치면 그날의 개별 작업이 나옵니다.</p>
+              <ul class="list" id="daily"><li class="empty">아직 기록된 작업이 없어요. commit하거나 문서를 저장하면 여기에 쌓입니다.</li></ul>
             </section>
           </div>
 
           <div class="history-panel" data-history-panel="cycle" hidden>
             <section class="card panel cycles">
-              <div class="panel-head"><div><div class="eyebrow">Project Journey</div><h2>Cycle 로그</h2></div><span class="count" id="cycle-log-label">0 cycles</span></div>
+              <div class="panel-head"><div><div class="eyebrow">Cycle</div><h2>마일스톤 로그</h2></div><span class="count" id="cycle-log-label">—</span></div>
               <p class="panel-hint">완결되는 목표(마일스톤) 단위로 끊어, 각 Cycle에서 무엇을 이뤘는지 보여줍니다.</p>
-              <ul class="list" id="cycle-log"><li class="empty">아직 시작한 Cycle이 없습니다.</li></ul>
+              <ul class="list" id="cycle-log"><li class="empty">아직 시작한 마일스톤이 없어요. beacon cycle start로 첫 목표를 시작해 보세요.</li></ul>
             </section>
           </div>
 
           <div class="history-panel" data-history-panel="detail" hidden>
             <section class="card panel timeline">
-              <div class="panel-head"><div><div class="eyebrow">Project Timeline</div><h2>작업과 산출물의 흐름</h2></div><span class="count" id="timeline-label">0 events</span></div>
+              <div class="panel-head"><div><div class="eyebrow">타임라인</div><h2>작업 하나하나</h2></div><span class="count" id="timeline-label">—</span></div>
               <p class="panel-hint">commit과 문서 변경을 하나씩 시간순으로 나열합니다.</p>
-              <ul class="list" id="timeline"><li class="empty">프로젝트 흐름을 구성하고 있습니다.</li></ul>
+              <ul class="list" id="timeline"><li class="empty">아직 표시할 commit이나 문서 변경이 없어요.</li></ul>
             </section>
 
             <section class="card panel changes">
-              <div class="panel-head"><div><div class="eyebrow">Append-only Activity</div><h2>스캔 사이의 변화</h2></div><span class="count" id="change-label">0 changes</span></div>
-              <p class="panel-hint">직전 스캔과 비교해 새로 생기거나 바뀐 항목을 보여줍니다.</p>
-              <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장됩니다.</li></ul>
+              <div class="panel-head"><div><div class="eyebrow">변화</div><h2>스캔 사이에 바뀐 것</h2></div><span class="count" id="change-label">—</span></div>
+              <p class="panel-hint">직전에 봤을 때와 비교해 새로 생기거나 바뀐 항목을 보여줍니다.</p>
+              <ul class="list" id="changes"><li class="empty">첫 스캔은 기준선으로 저장돼요. 다음 스캔부터 추가·변경·삭제가 여기 쌓입니다.</li></ul>
             </section>
           </div>
         </div>
@@ -512,8 +512,8 @@ export function renderDashboard(): string {
         const row = text('div', 'timeline-row', '');
         const content = text('div', '', '');
         content.append(text('p', 'timeline-title', event.title), text('p', 'signal-detail', event.detail));
-        if (event.relatedArtifacts.length) content.append(text('div', 'artifact-path', '산출물 · ' + event.relatedArtifacts.join(', ')));
-        content.append(text('div', 'source', '출처 · ' + event.source + ':' + event.reference));
+        if (event.relatedArtifacts.length) content.append(text('div', 'artifact-path', '문서 · ' + event.relatedArtifacts.join(', ')));
+        content.append(text('div', 'source', '근거 · ' + event.source + ':' + event.reference));
         const side = text('div', 'timeline-side', '');
         const date = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(event.occurredAt));
         side.append(text('span', 'timeline-category', categoryLabels[event.category] || '변경'), text('span', 'timeline-meta', date));
@@ -560,7 +560,7 @@ export function renderDashboard(): string {
           const row = text('div', 'day-event', '');
           const content = text('div', '', '');
           content.append(text('p', 'day-event-title', event.title));
-          content.append(text('div', 'day-event-source', '출처 · ' + event.source + ':' + event.reference));
+          content.append(text('div', 'day-event-source', '근거 · ' + event.source + ':' + event.reference));
           const side = text('div', 'day-event-side', '');
           const time = new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date(event.occurredAt));
           side.append(text('span', 'timeline-category', categoryLabels[event.category] || '변경'), text('span', 'day-event-time', time));
@@ -577,7 +577,7 @@ export function renderDashboard(): string {
         top.append(text('p', 'signal-title', change.title), text('span', 'badge ' + change.kind, changeLabels[change.kind]));
         item.append(top, text('p', 'signal-detail', change.detail));
         const date = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(change.detectedAt));
-        item.append(text('div', 'source', '출처 · ' + change.source + ':' + change.reference + ' · ' + date));
+        item.append(text('div', 'source', '근거 · ' + change.source + ':' + change.reference + ' · ' + date));
         return item;
       }
 
@@ -722,18 +722,18 @@ export function renderDashboard(): string {
 
           renderSignals(snapshot.health.signals);
           element('artifact-label').textContent = '핵심 ' + projectArtifacts.length + '개 · 지원 ' + supportArtifacts.length + '개';
-          element('timeline-label').textContent = history.timeline.length + (history.timeline.length < history.timelineCount ? ' / ' + history.timelineCount : '') + ' events';
-          element('change-label').textContent = history.changes.length + (history.changes.length < history.changeCount ? ' / ' + history.changeCount : '') + ' changes';
+          element('timeline-label').textContent = history.timeline.length + (history.timeline.length < history.timelineCount ? ' / ' + history.timelineCount : '') + '건';
+          element('change-label').textContent = history.changes.length + (history.changes.length < history.changeCount ? ' / ' + history.changeCount : '') + '건';
           renderArtifacts(projectArtifacts, supportArtifacts);
-          replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 문서 수정이나 Git commit이 없습니다.');
+          replaceList('timeline', history.timeline, renderTimelineEvent, '아직 표시할 commit이나 문서 변경이 없어요.');
           const days = groupByDay(history.timeline);
-          element('daily-label').textContent = days.length + ' days';
+          element('daily-label').textContent = days.length + '일';
           element('tab-daily-count').textContent = String(days.length);
-          replaceList('daily', days, renderDay, '날짜별로 묶을 작업 이벤트가 아직 없습니다.');
-          replaceList('changes', history.changes, renderChange, '첫 스캔을 기준선으로 저장했습니다. 다음 스캔부터 추가·변경·삭제를 기록합니다.');
+          replaceList('daily', days, renderDay, '아직 기록된 작업이 없어요. commit하거나 문서를 저장하면 여기에 쌓입니다.');
+          replaceList('changes', history.changes, renderChange, '첫 스캔은 기준선으로 저장돼요. 다음 스캔부터 추가·변경·삭제가 여기 쌓입니다.');
           element('tab-detail-count').textContent = String(history.timeline.length);
           const orderedCycles = [...journey.cycles].sort((left, right) => right.sequence - left.sequence);
-          element('cycle-log-label').textContent = orderedCycles.length + ' cycles';
+          element('cycle-log-label').textContent = orderedCycles.length + '개';
           element('tab-cycle-count').textContent = String(orderedCycles.length);
           replaceList('cycle-log', orderedCycles, renderCycle, '완성할 목표(마일스톤) 하나를 beacon cycle start로 시작하면, 여기에 시작–완성 로그가 쌓입니다.');
           element('status').textContent = '연결됨';

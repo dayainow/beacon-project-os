@@ -21,12 +21,12 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.equal((dashboard.match(/data-view-panel=/g) ?? []).length, 4);
   assert.match(script, /window\.addEventListener\('hashchange'/);
   assert.match(script, /aria-current/);
-  assert.match(dashboard, /Project Timeline/);
-  assert.match(dashboard, /Cycle 로그/);
+  assert.match(dashboard, /작업 하나하나/);
+  assert.match(dashboard, /마일스톤 로그/);
   assert.match(script, /renderCycle/);
-  assert.match(dashboard, /일자별 작업/);
+  assert.match(dashboard, /날짜별로 한 일/);
   assert.match(script, /groupByDay/);
-  assert.match(dashboard, /Append-only Activity/);
+  assert.match(dashboard, /스캔 사이에 바뀐 것/);
   // 히스토리 내부 탭 분리와 자동 스캔 토글이 있어야 한다.
   assert.match(dashboard, /data-history-tab="cycle"/);
   assert.match(dashboard, /data-history-tab="daily"/);
