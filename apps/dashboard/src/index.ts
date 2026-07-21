@@ -32,13 +32,18 @@ export function renderDashboard(): string {
       .brand { color: #5b43ff; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
       h1 { margin: 8px 0 0; font-size: clamp(34px, 5vw, 52px); letter-spacing: -.045em; }
       .page-description { margin: 8px 0 0; color: #777b85; font-size: 13px; }
-      .header-actions { display: flex; align-items: center; gap: 10px; }
-      .status { border: 1px solid #ddd8ff; background: #f5f2ff; color: #5b43ff; border-radius: 999px; padding: 9px 12px; font-size: 12px; font-weight: 800; }
-      .refresh { border: 1px solid #d8d9dd; background: #fff; border-radius: 10px; padding: 9px 13px; color: #34373d; cursor: pointer; font-weight: 700; }
+      .header-actions { display: flex; align-items: center; gap: 8px; }
+      .header-actions > * { height: 36px; display: inline-flex; align-items: center; gap: 7px; padding: 0 13px; border-radius: 10px; font-size: 12px; font-weight: 700; border: 1px solid #d8d9dd; box-sizing: border-box; }
+      .status { border-color: #ddd8ff; background: #f5f2ff; color: #5b43ff; font-weight: 800; }
+      .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #5b43ff; flex: none; }
+      .status.offline { border-color: #f0d3d6; background: #fdf2f3; color: #bd2736; }
+      .status.offline::before { background: #d64550; }
+      .refresh { background: #fff; color: #34373d; cursor: pointer; }
       .refresh:hover { border-color: #9d91ff; }
       .refresh:disabled { cursor: wait; opacity: .55; }
-      .auto-scan { display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid #d8d9dd; border-radius: 10px; background: #fff; color: #555962; font-size: 12px; font-weight: 700; cursor: pointer; }
-      .auto-scan input { accent-color: #5b43ff; cursor: pointer; }
+      .auto-scan { background: #fff; color: #555962; cursor: pointer; }
+      .auto-scan:hover { border-color: #9d91ff; }
+      .auto-scan input { accent-color: #5b43ff; cursor: pointer; margin: 0; }
       .history-tabs { display: flex; gap: 6px; margin-bottom: 4px; }
       .history-tab { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border: 1px solid #dedfe3; border-radius: 999px; background: #fff; color: #555962; font-size: 13px; font-weight: 800; cursor: pointer; }
       .history-tab:hover { border-color: #9d91ff; }
@@ -185,6 +190,23 @@ export function renderDashboard(): string {
       .day-category { border-radius: 999px; padding: 4px 9px; background: #f2efff; color: #5b43ff; font-size: 11px; font-weight: 800; white-space: nowrap; }
       .empty { padding: 28px 24px; color: #777b85; font-size: 13px; }
       .error { margin-bottom: 12px; padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
+      .nav-guide { margin-top: 6px; }
+      .nav-guide .nav-count { background: #ede9ff; color: #5b43ff; }
+      .guide-card { padding: 30px 32px 32px; }
+      .guide-intro h2 { margin: 8px 0 10px; font-size: 22px; letter-spacing: -.02em; line-height: 1.3; }
+      .guide-intro p { margin: 0; color: #555962; font-size: 14px; line-height: 1.65; max-width: 64ch; }
+      .guide-intro strong { color: #34373d; }
+      .guide-steps { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 10px; counter-reset: g; }
+      .gstep { display: flex; gap: 15px; padding: 17px 18px; border: 1px solid #e4e5e8; border-radius: 13px; background: #fcfcfd; }
+      .gstep-n { flex: none; width: 28px; height: 28px; border-radius: 8px; background: #5b43ff; color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 800; }
+      .gstep h3 { margin: 3px 0 5px; font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+      .gstep h3 code { font-size: .82em; background: #f0edff; color: #4935d0; padding: 2px 7px; border-radius: 6px; font-weight: 700; margin-left: 4px; }
+      .gstep p { margin: 0; color: #666a73; font-size: 13px; line-height: 1.6; }
+      .gstep p code { font-size: .85em; background: #f2f2f5; padding: 1px 5px; border-radius: 5px; overflow-wrap: anywhere; }
+      .guide-notes { display: grid; gap: 8px; margin-top: 22px; padding-top: 22px; border-top: 1px solid #ececef; }
+      .gnote { padding: 13px 15px; border-radius: 11px; background: #f7f5ff; color: #514875; font-size: 12.5px; line-height: 1.6; }
+      .gnote strong { color: #3f2ec4; }
+      .gnote code { font-size: .85em; background: #ece8ff; padding: 1px 5px; border-radius: 5px; }
       @media (max-width: 960px) { .app-shell { display: block; } .sidebar { position: sticky; z-index: 10; width: 100%; height: auto; padding: 14px 20px; border-right: 0; border-bottom: 1px solid #dedfe3; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 20px; } .sidebar-brand { padding: 0; border: 0; } .sidebar-brand strong { margin: 0; font-size: 18px; } .sidebar-brand .brand, .sidebar-brand span, .sidebar-project, .nav-description { display: none; } .navigation { display: flex; justify-content: flex-end; gap: 5px; padding: 0; overflow-x: auto; } .nav-link { display: flex; align-items: center; gap: 7px; padding: 9px 11px; white-space: nowrap; } .metrics { grid-template-columns: repeat(2, 1fr); } .stage-grid { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
       @media (max-width: 560px) { .sidebar { display: block; padding: 12px; } .sidebar-brand { display: none; } .navigation { justify-content: flex-start; } .nav-count { display: none; } main { width: min(100% - 24px, 1160px); padding-top: 28px; } header { align-items: flex-start; flex-direction: column; } .metrics, .stage-grid { grid-template-columns: 1fr; } .metric { min-height: auto; } .journey-top { display: block; } .cycle-number { display: block; margin-top: 12px; } .requirement { grid-template-columns: auto minmax(0, 1fr); } .requirement-action { grid-column: 2; text-align: left; max-width: none; } }
     </style>
@@ -212,7 +234,11 @@ export function renderDashboard(): string {
           </a>
           <a class="nav-link" href="#history" data-view-link="history">
             <span class="nav-name">히스토리</span><span class="nav-count" id="nav-history-count">—</span>
-            <span class="nav-description">Timeline과 누적 변화</span>
+            <span class="nav-description">타임라인과 변화 기록</span>
+          </a>
+          <a class="nav-link nav-guide" href="#guide" data-view-link="guide">
+            <span class="nav-name">가이드</span><span class="nav-count">?</span>
+            <span class="nav-description">처음이라면 여기부터</span>
           </a>
         </nav>
         <div class="sidebar-project">
@@ -346,6 +372,28 @@ export function renderDashboard(): string {
             </section>
           </div>
         </div>
+
+        <div class="view" id="view-guide" data-view-panel="guide" hidden>
+          <section class="card guide-card">
+            <div class="guide-intro">
+              <div class="eyebrow">시작하기</div>
+              <h2>Beacon은 프로젝트 폴더에 붙는 "상태 표시등"입니다</h2>
+              <p>파일과 Git을 <strong>읽기만 해서</strong> 지금까지 뭐가 됐고 뭐가 빠졌는지 보여줍니다. 손으로 정할 건 딱 하나 — <strong>이번에 완성할 목표(마일스톤)</strong> 뿐이고, 나머지는 자동으로 채워집니다.</p>
+            </div>
+            <ol class="guide-steps">
+              <li class="gstep"><span class="gstep-n">1</span><div><h3>붙이기 <code>beacon init</code></h3><p>확인할 프로젝트 폴더에서 실행하면 <code>.beacon/</code> 인덱스가 생깁니다. 원본 파일은 건드리지 않아요.</p></div></li>
+              <li class="gstep"><span class="gstep-n">2</span><div><h3>열어보기 <code>beacon open</code></h3><p>이 대시보드가 열립니다. 개요·단계·산출물·히스토리 네 화면으로 현재 상태를 봅니다.</p></div></li>
+              <li class="gstep"><span class="gstep-n">3</span><div><h3>마일스톤 시작 <code>beacon cycle start</code></h3><p>이름과 목표를 정합니다. 예: <code>beacon cycle start "대출 기능 MVP" --goal "대출·반납 첫 흐름을 완성한다"</code>. 이 순간이 출발점으로 기록됩니다.</p></div></li>
+              <li class="gstep"><span class="gstep-n">4</span><div><h3>평소처럼 작업</h3><p>Beacon엔 아무것도 입력하지 않습니다. 코드 짜고 commit하면, <strong>자동 스캔</strong>을 켠 채로 히스토리에 저절로 쌓입니다.</p></div></li>
+              <li class="gstep"><span class="gstep-n">5</span><div><h3>마일스톤 종료 <code>beacon cycle complete</code></h3><p>목표가 됐으면 닫습니다. 출발점 대비 성과(산출물·commit·Health·단계 이동)가 자동 요약돼 히스토리 Cycle 탭에 남습니다.</p></div></li>
+            </ol>
+            <div class="guide-notes">
+              <div class="gnote"><strong>Health란?</strong> 소개·기획·설계 문서 3개 + Git·이력 2개, 총 5개 중 몇 개가 준비됐나의 비율입니다. 하나라도 빠지면 정직하게 노란색으로 표시돼요.</div>
+              <div class="gnote"><strong>단계(P0~P4)란?</strong> 기획→디자인→개발→검증→배포 중 지금 어디까지 근거가 갖춰졌는지 보여줍니다. 산출물 화면의 종류 배지와 이어집니다.</div>
+              <div class="gnote"><strong>내 것은 내 것.</strong> 파일은 외부로 전송되지 않고, 모든 데이터는 내 컴퓨터의 <code>.beacon/</code> 폴더에만 저장됩니다.</div>
+            </div>
+          </section>
+        </div>
       </main>
     </div>
     <script>
@@ -367,6 +415,7 @@ export function renderDashboard(): string {
         process: { title: '단계와 Gate', description: 'P0–P4 단계별 준비 근거와 다음 행동을 확인합니다.' },
         artifacts: { title: '프로젝트 산출물', description: '파일에서 자동으로 발견한 핵심 결과물을 확인합니다.' },
         history: { title: '프로젝트 히스토리', description: '작업의 의미 흐름과 스캔 사이의 변화를 확인합니다.' },
+        guide: { title: '사용 가이드', description: 'Beacon을 처음부터 어떻게 쓰는지 단계별로 안내합니다.' },
       };
 
       function text(tag, className, value) {
@@ -737,8 +786,10 @@ export function renderDashboard(): string {
           element('tab-cycle-count').textContent = String(orderedCycles.length);
           replaceList('cycle-log', orderedCycles, renderCycle, '완성할 목표(마일스톤) 하나를 beacon cycle start로 시작하면, 여기에 시작–완성 로그가 쌓입니다.');
           element('status').textContent = '연결됨';
+          element('status').className = 'status';
         } catch {
-          element('status').textContent = '확인 필요';
+          element('status').textContent = '연결 끊김';
+          element('status').className = 'status offline';
           element('error').hidden = false;
           element('error').textContent = '프로젝트를 스캔하지 못했습니다. Beacon을 실행한 터미널에서 경로와 권한을 확인하세요.';
         } finally {

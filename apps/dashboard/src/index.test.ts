@@ -18,7 +18,9 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(dashboard, /data-view-link="process"/);
   assert.match(dashboard, /data-view-link="artifacts"/);
   assert.match(dashboard, /data-view-link="history"/);
-  assert.equal((dashboard.match(/data-view-panel=/g) ?? []).length, 4);
+  assert.match(dashboard, /data-view-link="guide"/);
+  assert.match(dashboard, /사용 가이드/);
+  assert.equal((dashboard.match(/data-view-panel=/g) ?? []).length, 5);
   assert.match(script, /window\.addEventListener\('hashchange'/);
   assert.match(script, /aria-current/);
   assert.match(dashboard, /작업 하나하나/);
