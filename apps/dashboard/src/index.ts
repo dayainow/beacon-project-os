@@ -6,32 +6,59 @@ export function renderDashboard(): string {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Beacon</title>
     <style>
-      :root { color-scheme: light; font-family: Inter, Pretendard, system-ui, sans-serif; background: #f5f6f8; color: #17191d; }
+      :root {
+        color-scheme: light;
+        font-family: Inter, Pretendard, system-ui, sans-serif;
+        --bg: #eceef2;
+        --surface: #ffffff;
+        --surface-2: #f6f7f9;
+        --card-radius: 22px;
+        --card-shadow: 0 1px 2px rgb(20 22 28 / 4%), 0 12px 28px rgb(20 22 28 / 5%);
+        --line: #e7e9ee;
+        --line-soft: #eef0f3;
+        --ink: #16181d;
+        --ink-soft: #5c6069;
+        --ink-faint: #9296a0;
+        --accent: #5b43ff;
+        --accent-soft: #f0edff;
+        --accent-ink: #4232c8;
+        background: var(--bg); color: var(--ink);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --bg: #0e1014; --surface: #171a21; --surface-2: #1e222b;
+          --card-shadow: 0 1px 2px rgb(0 0 0 / 20%), 0 12px 28px rgb(0 0 0 / 24%);
+          --line: #272b34; --line-soft: #1f232c;
+          --ink: #e7e9ee; --ink-soft: #a1a6b0; --ink-faint: #6d727d;
+          --accent: #8b84ff; --accent-soft: #21223c; --accent-ink: #b3aeff;
+        }
+      }
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100vh; }
       button { font: inherit; }
       a { color: inherit; }
-      .app-shell { width: min(1440px, 100%); min-height: 100vh; margin: 0 auto; display: grid; grid-template-columns: 248px minmax(0, 1fr); }
-      .sidebar { position: sticky; top: 0; height: 100vh; padding: 30px 20px 24px; border-right: 1px solid #dedfe3; background: rgb(250 250 251 / 94%); backdrop-filter: blur(16px); display: flex; flex-direction: column; }
-      .sidebar-brand { padding: 0 10px 26px; border-bottom: 1px solid #e5e5e8; }
-      .sidebar-brand strong { display: block; margin-top: 6px; font-size: 22px; letter-spacing: -.035em; }
-      .sidebar-brand span { display: block; margin-top: 5px; color: #858892; font-size: 11px; line-height: 1.45; }
-      .navigation { display: grid; gap: 6px; padding: 24px 0; }
-      .nav-link { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 13px; border: 1px solid transparent; border-radius: 12px; text-decoration: none; color: #555962; }
-      .nav-link:hover { border-color: #dedfe3; background: #fff; }
-      .nav-link[aria-current="page"] { border-color: #d9d2ff; background: #f4f1ff; color: #3f2ec4; box-shadow: 0 6px 18px rgb(63 46 196 / 8%); }
-      .nav-name { font-size: 13px; font-weight: 800; }
-      .nav-description { grid-column: 1 / -1; color: #8a8d95; font-size: 10px; }
-      .nav-count { min-width: 22px; padding: 2px 6px; border-radius: 999px; background: #ececf0; color: #6c707a; font-size: 10px; font-weight: 800; text-align: center; }
-      .nav-link[aria-current="page"] .nav-count { background: #ded7ff; color: #4935d0; }
-      .sidebar-project { margin-top: auto; padding: 16px 12px 0; border-top: 1px solid #e5e5e8; }
+      .app-shell { width: min(1480px, 100%); min-height: 100vh; margin: 0 auto; display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 0; }
+      .sidebar { position: sticky; top: 0; height: 100vh; padding: 26px 16px 22px; background: transparent; display: flex; flex-direction: column; }
+      .sidebar-brand { padding: 4px 12px 22px; }
+      .sidebar-brand strong { display: block; margin-top: 6px; font-size: 20px; letter-spacing: -.035em; }
+      .sidebar-brand span { display: block; margin-top: 5px; color: var(--ink-faint); font-size: 11px; line-height: 1.45; }
+      .navigation { display: grid; gap: 3px; padding: 18px 0; }
+      .nav-link { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; padding: 11px 13px; border: 1px solid transparent; border-radius: 13px; text-decoration: none; color: var(--ink-soft); }
+      .nav-link:hover { background: var(--surface); box-shadow: var(--card-shadow); }
+      .nav-link[aria-current="page"] { background: var(--surface); color: var(--accent-ink); box-shadow: var(--card-shadow); }
+      .nav-name { font-size: 13.5px; font-weight: 800; }
+      .nav-description { grid-column: 1 / -1; color: var(--ink-faint); font-size: 10px; }
+      .nav-count { min-width: 22px; padding: 2px 6px; border-radius: 999px; background: var(--surface-2); color: var(--ink-faint); font-size: 10px; font-weight: 800; text-align: center; }
+      .nav-link[aria-current="page"] .nav-count { background: var(--accent-soft); color: var(--accent-ink); }
+      .sidebar-project { margin-top: auto; padding: 15px 14px; border-radius: 14px; background: var(--surface); box-shadow: var(--card-shadow); }
       .sidebar-project strong { display: block; margin-top: 7px; font-size: 13px; overflow-wrap: anywhere; }
-      .sidebar-project span { display: block; margin-top: 5px; color: #858892; font-size: 10px; }
-      main { width: min(1160px, calc(100% - 48px)); margin: 0 auto; padding: 44px 0 72px; }
-      header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
-      .brand { color: #5b43ff; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-      h1 { margin: 8px 0 0; font-size: clamp(34px, 5vw, 52px); letter-spacing: -.045em; }
-      .page-description { margin: 8px 0 0; color: #777b85; font-size: 13px; }
+      .sidebar-project span { display: block; margin-top: 5px; color: var(--ink-faint); font-size: 10px; }
+      main { width: 100%; margin: 0 auto; padding: 28px 32px 56px; }
+      header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+      .brand { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+      h1 { margin: 6px 0 0; font-size: clamp(26px, 4vw, 34px); letter-spacing: -.035em; }
+      .page-description { margin: 7px 0 0; color: var(--ink-soft); font-size: 13px; }
       .header-actions { display: flex; align-items: center; gap: 8px; }
       .header-actions > * { height: 36px; display: inline-flex; align-items: center; gap: 7px; padding: 0 13px; border-radius: 10px; font-size: 12px; font-weight: 700; border: 1px solid #d8d9dd; box-sizing: border-box; }
       .status { border-color: #ddd8ff; background: #f5f2ff; color: #5b43ff; font-weight: 800; }
@@ -53,9 +80,9 @@ export function renderDashboard(): string {
       .history-panel { display: grid; gap: 12px; }
       .history-panel[hidden] { display: none; }
       .panel-hint { margin: 0; padding: 0 24px 4px; color: #8a8d95; font-size: 12px; line-height: 1.5; }
-      .card { background: #fff; border: 1px solid #dedfe3; border-radius: 18px; box-shadow: 0 10px 30px rgb(23 25 29 / 5%); }
+      .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
       .identity { padding: 26px; }
-      .eyebrow { color: #777b85; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+      .eyebrow { color: var(--ink-faint); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
       h2 { margin: 8px 0 6px; font-size: 25px; letter-spacing: -.025em; }
       .root { margin: 0; color: #6c707a; font-size: 13px; overflow-wrap: anywhere; }
       .identity-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
@@ -70,6 +97,29 @@ export function renderDashboard(): string {
       .journey-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
       .cycle-number { color: #5b43ff; font: 800 12px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
       .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+      .chart-grid { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 12px; }
+      .chart-card { padding: 20px 22px; display: flex; flex-direction: column; }
+      .chart-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+      .chart-head h3 { margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+      .chart-head .eyebrow { flex-basis: 100%; }
+      .chart-total { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+      .donut-wrap { position: relative; width: 120px; height: 120px; margin: 4px auto 6px; }
+      .donut-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+      .donut-center strong { display: block; font-size: 24px; font-weight: 850; letter-spacing: -.04em; }
+      .donut-center span { font-size: 10px; color: var(--ink-faint); font-weight: 700; }
+      .donut-legend { display: grid; gap: 6px; margin-top: auto; padding-top: 12px; }
+      .donut-legend .lg { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-soft); }
+      .donut-legend .lg .sw { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+      .donut-legend .lg .n { margin-left: auto; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+      .hbars { display: grid; gap: 11px; margin-top: 2px; }
+      .hbar-row { display: grid; gap: 5px; }
+      .hbar-top { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+      .hbar-top .st { font-weight: 700; }
+      .hbar-top .stx { margin-left: auto; font-size: 11px; font-weight: 800; }
+      .hbar-track { height: 7px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+      .hbar-fill { height: 100%; border-radius: 999px; }
+      .area-axis { display: flex; justify-content: space-between; margin-top: 6px; color: var(--ink-faint); font-size: 10px; font-variant-numeric: tabular-nums; }
+      #activity-area { display: block; margin-top: 4px; }
       .metric { padding: 20px; min-height: 118px; }
       .metric-value { display: block; margin-top: 12px; font-size: 28px; font-weight: 850; letter-spacing: -.04em; }
       .metric-note { display: block; margin-top: 4px; color: #777b85; font-size: 12px; }
@@ -207,7 +257,7 @@ export function renderDashboard(): string {
       .gnote { padding: 13px 15px; border-radius: 11px; background: #f7f5ff; color: #514875; font-size: 12.5px; line-height: 1.6; }
       .gnote strong { color: #3f2ec4; }
       .gnote code { font-size: .85em; background: #ece8ff; padding: 1px 5px; border-radius: 5px; }
-      @media (max-width: 960px) { .app-shell { display: block; } .sidebar { position: sticky; z-index: 10; width: 100%; height: auto; padding: 14px 20px; border-right: 0; border-bottom: 1px solid #dedfe3; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 20px; } .sidebar-brand { padding: 0; border: 0; } .sidebar-brand strong { margin: 0; font-size: 18px; } .sidebar-brand .brand, .sidebar-brand span, .sidebar-project, .nav-description { display: none; } .navigation { display: flex; justify-content: flex-end; gap: 5px; padding: 0; overflow-x: auto; } .nav-link { display: flex; align-items: center; gap: 7px; padding: 9px 11px; white-space: nowrap; } .metrics { grid-template-columns: repeat(2, 1fr); } .stage-grid { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } }
+      @media (max-width: 960px) { .app-shell { display: block; } .sidebar { position: sticky; z-index: 10; width: 100%; height: auto; padding: 14px 20px; border-right: 0; border-bottom: 1px solid #dedfe3; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 20px; } .sidebar-brand { padding: 0; border: 0; } .sidebar-brand strong { margin: 0; font-size: 18px; } .sidebar-brand .brand, .sidebar-brand span, .sidebar-project, .nav-description { display: none; } .navigation { display: flex; justify-content: flex-end; gap: 5px; padding: 0; overflow-x: auto; } .nav-link { display: flex; align-items: center; gap: 7px; padding: 9px 11px; white-space: nowrap; } .metrics { grid-template-columns: repeat(2, 1fr); } .stage-grid { grid-template-columns: repeat(2, 1fr); } .layout { grid-template-columns: 1fr; } .chart-grid { grid-template-columns: 1fr 1fr; } .chart-wide { grid-column: 1 / -1; } }
       @media (max-width: 560px) { .sidebar { display: block; padding: 12px; } .sidebar-brand { display: none; } .navigation { justify-content: flex-start; } .nav-count { display: none; } main { width: min(100% - 24px, 1160px); padding-top: 28px; } header { align-items: flex-start; flex-direction: column; } .metrics, .stage-grid { grid-template-columns: 1fr; } .metric { min-height: auto; } .journey-top { display: block; } .cycle-number { display: block; margin-top: 12px; } .requirement { grid-template-columns: auto minmax(0, 1fr); } .requirement-action { grid-column: 2; text-align: left; max-width: none; } }
     </style>
   </head>
@@ -265,6 +315,23 @@ export function renderDashboard(): string {
         <div id="error" class="error" hidden></div>
 
         <div class="view" id="view-overview" data-view-panel="overview">
+          <section class="chart-grid" aria-label="프로젝트 요약 차트">
+            <article class="card chart-card">
+              <div class="chart-head"><div class="eyebrow">진행 단계</div><h3>P0–P4 준비도</h3></div>
+              <div class="donut-wrap"><svg id="stage-donut" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="단계 준비도 도넛"></svg><div class="donut-center"><strong id="donut-value">—</strong><span>완료</span></div></div>
+              <div class="donut-legend" id="stage-legend"></div>
+            </article>
+            <article class="card chart-card">
+              <div class="chart-head"><div class="eyebrow">건강도</div><h3>Health 5개 기준</h3></div>
+              <div class="hbars" id="health-bars"></div>
+            </article>
+            <article class="card chart-card chart-wide">
+              <div class="chart-head"><div class="eyebrow">활동량</div><h3>최근 작업 흐름</h3><span class="chart-total" id="activity-total">—</span></div>
+              <svg id="activity-area" viewBox="0 0 320 96" preserveAspectRatio="none" width="100%" height="96" role="img" aria-label="일자별 활동량 영역 그래프"></svg>
+              <div class="area-axis" id="activity-axis"></div>
+            </article>
+          </section>
+
           <section class="card identity" aria-live="polite">
             <div class="eyebrow">Project Identity</div>
             <h2 id="name">불러오는 중…</h2>
@@ -423,6 +490,102 @@ export function renderDashboard(): string {
         if (className) node.className = className;
         node.textContent = value;
         return node;
+      }
+
+      const SVGNS = 'http://www.w3.org/2000/svg';
+      function svg(tag, attrs) {
+        const node = document.createElementNS(SVGNS, tag);
+        for (const key in attrs) node.setAttribute(key, attrs[key]);
+        return node;
+      }
+
+      // 검증된 팔레트 (dataviz validate_palette.js 통과)
+      const chartColors = { done: '#13a76f', current: '#5b43ff', wait: '#d3d6dd', ok: '#13a76f', warn: '#f0a100', risk: '#df4b57' };
+
+      function renderStageDonut(process) {
+        const box = element('stage-donut');
+        box.replaceChildren();
+        const total = process.totalStages;
+        const done = process.readyStages;
+        const current = process.currentStageId ? 1 : 0;
+        const wait = total - done - current;
+        const segs = [
+          { label: '완료', value: done, color: chartColors.done },
+          { label: '진행 중', value: current, color: chartColors.current },
+          { label: '대기', value: wait, color: chartColors.wait },
+        ];
+        const r = 46, cx = 60, cy = 60, circ = 2 * Math.PI * r, gap = 3;
+        box.append(svg('circle', { cx, cy, r, fill: 'none', stroke: 'var(--surface-2)', 'stroke-width': 13 }));
+        let offset = 0;
+        segs.forEach((s) => {
+          if (s.value <= 0) return;
+          const len = (s.value / total) * circ;
+          const arc = svg('circle', {
+            cx, cy, r, fill: 'none', stroke: s.color, 'stroke-width': 13,
+            'stroke-dasharray': Math.max(0, len - gap) + ' ' + (circ - Math.max(0, len - gap)),
+            'stroke-dashoffset': -offset, transform: 'rotate(-90 ' + cx + ' ' + cy + ')', 'stroke-linecap': 'round',
+          });
+          box.append(arc);
+          offset += len;
+        });
+        element('donut-value').textContent = done + '/' + total;
+        const legend = element('stage-legend');
+        legend.replaceChildren();
+        segs.forEach((s) => {
+          const row = text('div', 'lg', '');
+          const sw = text('span', 'sw', ''); sw.style.background = s.color;
+          row.append(sw, text('span', '', s.label), text('span', 'n', String(s.value)));
+          legend.append(row);
+        });
+      }
+
+      function renderHealthBars(health) {
+        const box = element('health-bars');
+        box.replaceChildren();
+        const levelColor = { ready: chartColors.ok, attention: chartColors.warn, warning: chartColors.risk };
+        const levelText = { ready: '준비됨', attention: '확인', warning: '보완' };
+        health.signals.slice(0, 5).forEach((sig) => {
+          const color = levelColor[sig.level] || chartColors.wait;
+          const row = text('div', 'hbar-row', '');
+          const top = text('div', 'hbar-top', '');
+          const dot = text('span', 'sw', ''); dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:' + color;
+          const stx = text('span', 'stx', levelText[sig.level] || '—'); stx.style.color = color;
+          top.append(dot, text('span', 'st', sig.title.replace(/(습니다|입니다)$/, '')), stx);
+          const track = text('div', 'hbar-track', '');
+          const fill = text('div', 'hbar-fill', '');
+          fill.style.cssText = 'width:' + (sig.level === 'ready' ? 100 : sig.level === 'attention' ? 55 : 20) + '%;background:' + color;
+          track.append(fill);
+          row.append(top, track);
+          box.append(row);
+        });
+      }
+
+      function renderActivityArea(timeline) {
+        const box = element('activity-area');
+        box.replaceChildren();
+        const days = groupByDay(timeline).slice(0, 14).reverse();
+        element('activity-total').textContent = timeline.length + '건';
+        const axis = element('activity-axis');
+        axis.replaceChildren();
+        if (days.length === 0) {
+          box.append(svg('line', { x1: 0, y1: 90, x2: 320, y2: 90, stroke: 'var(--line)', 'stroke-width': 1 }));
+          return;
+        }
+        const W = 320, H = 96, pad = 6;
+        const max = Math.max(1, ...days.map((d) => d.total));
+        const step = days.length > 1 ? (W) / (days.length - 1) : 0;
+        const pts = days.map((d, i) => [days.length > 1 ? i * step : W / 2, H - pad - (d.total / max) * (H - pad * 2)]);
+        const line = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+        const area = line + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + H + ' L' + pts[0][0].toFixed(1) + ' ' + H + ' Z';
+        const grad = svg('linearGradient', { id: 'areaGrad', x1: '0', y1: '0', x2: '0', y2: '1' });
+        grad.append(svg('stop', { offset: '0', 'stop-color': chartColors.current, 'stop-opacity': '0.22' }));
+        grad.append(svg('stop', { offset: '1', 'stop-color': chartColors.current, 'stop-opacity': '0' }));
+        const defs = svg('defs', {}); defs.append(grad); box.append(defs);
+        box.append(svg('path', { d: area, fill: 'url(#areaGrad)' }));
+        box.append(svg('path', { d: line, fill: 'none', stroke: chartColors.current, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+        pts.forEach((p) => box.append(svg('circle', { cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: 2.5, fill: chartColors.current })));
+        const fmt = (d) => new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(d + 'T00:00:00Z'));
+        axis.append(text('span', '', fmt(days[0].date)), text('span', '', fmt(days[days.length - 1].date)));
       }
 
       function replaceList(id, items, render, emptyMessage) {
@@ -768,6 +931,9 @@ export function renderDashboard(): string {
           element('nav-artifact-count').textContent = String(projectArtifacts.length);
           element('nav-history-count').textContent = String(history.timelineCount);
           renderProcess(snapshot.process);
+          renderStageDonut(snapshot.process);
+          renderHealthBars(snapshot.health);
+          renderActivityArea(history.timeline);
 
           renderSignals(snapshot.health.signals);
           element('artifact-label').textContent = '핵심 ' + projectArtifacts.length + '개 · 지원 ' + supportArtifacts.length + '개';
