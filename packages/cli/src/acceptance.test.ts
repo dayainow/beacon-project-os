@@ -305,8 +305,8 @@ test("beacon init → beacon open → project identity", async (context) => {
   assert.match(dashboard, /프로젝트 점검/);
   assert.match(dashboard, /진행 단계/);
   assert.match(dashboard, /기획부터 배포까지/);
-  assert.match(dashboard, /Project Timeline/);
-  assert.match(dashboard, /Append-only Activity/);
+  assert.match(dashboard, /작업 하나하나/);
+  assert.match(dashboard, /스캔 사이에 바뀐 것/);
   assert.match(dashboard, /Project Journey/);
   assert.match(dashboard, /data-view-link="overview"/);
   assert.match(dashboard, /data-view-link="process"/);
