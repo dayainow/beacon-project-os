@@ -52,7 +52,7 @@ test("renders a syntactically valid snapshot dashboard without unsafe HTML inser
   assert.match(dashboard, /id="activity-area"/);
   assert.match(script, /renderArtifacts/);
   assert.match(dashboard, /id="artifact-groups"/);
-  assert.match(dashboard, /핵심 산출물/);
-  assert.match(dashboard, /지원 문서/);
+  assert.match(dashboard, /진행 단계/);
+  assert.match(dashboard, /건강도/);
   assert.doesNotMatch(script, /innerHTML|insertAdjacentHTML|document\.write/);
 });
