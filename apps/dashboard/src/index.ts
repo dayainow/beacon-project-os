@@ -8,31 +8,26 @@ export function renderDashboard(): string {
     <style>
       :root {
         color-scheme: light;
-        font-family: Inter, Pretendard, system-ui, sans-serif;
-        --bg: #eceef2;
+        --font-sans: "Pretendard Variable", "Pretendard", -apple-system, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI Variable", "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+        font-family: var(--font-sans);
+        font-feature-settings: "cv11", "ss01";
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        --bg: #eef0f3;
         --surface: #ffffff;
-        --surface-2: #f6f7f9;
-        --card-radius: 22px;
-        --card-shadow: 0 1px 2px rgb(20 22 28 / 4%), 0 12px 28px rgb(20 22 28 / 5%);
-        --line: #e7e9ee;
-        --line-soft: #eef0f3;
-        --ink: #16181d;
+        --surface-2: #f4f6f8;
+        --card-radius: 24px;
+        --card-shadow: 0 1px 3px rgb(20 22 28 / 3%), 0 8px 24px rgb(20 22 28 / 4%);
+        --line: #ebedf1;
+        --line-soft: #f1f3f6;
+        --ink: #191c22;
         --ink-soft: #5c6069;
-        --ink-faint: #9296a0;
+        --ink-faint: #9a9ea8;
         --accent: #5b43ff;
         --accent-soft: #f0edff;
         --accent-ink: #4232c8;
         background: var(--bg); color: var(--ink);
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          color-scheme: dark;
-          --bg: #0e1014; --surface: #171a21; --surface-2: #1e222b;
-          --card-shadow: 0 1px 2px rgb(0 0 0 / 20%), 0 12px 28px rgb(0 0 0 / 24%);
-          --line: #272b34; --line-soft: #1f232c;
-          --ink: #e7e9ee; --ink-soft: #a1a6b0; --ink-faint: #6d727d;
-          --accent: #8b84ff; --accent-soft: #21223c; --accent-ink: #b3aeff;
-        }
       }
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100vh; }
@@ -57,7 +52,7 @@ export function renderDashboard(): string {
       main { width: 100%; margin: 0 auto; padding: 28px 32px 56px; }
       header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
       .brand { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-      h1 { margin: 6px 0 0; font-size: clamp(26px, 4vw, 34px); letter-spacing: -.035em; }
+      h1 { margin: 6px 0 0; font-size: clamp(26px, 4vw, 33px); font-weight: 750; letter-spacing: -.033em; }
       .page-description { margin: 7px 0 0; color: var(--ink-soft); font-size: 13px; }
       .header-actions { display: flex; align-items: center; gap: 8px; }
       .header-actions > * { height: 36px; display: inline-flex; align-items: center; gap: 7px; padding: 0 13px; border-radius: 10px; font-size: 12px; font-weight: 700; border: 1px solid #d8d9dd; box-sizing: border-box; }
@@ -97,12 +92,12 @@ export function renderDashboard(): string {
       .journey-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
       .cycle-number { color: #5b43ff; font: 800 12px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
       .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-      .chart-grid { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 12px; }
+      .chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
       .chart-card { padding: 20px 22px; display: flex; flex-direction: column; }
-      .chart-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
-      .chart-head h3 { margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
-      .chart-head .eyebrow { flex-basis: 100%; }
-      .chart-total { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+      .chart-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 10px; margin-bottom: 16px; }
+      .chart-head .eyebrow { grid-column: 1 / -1; margin-bottom: 5px; }
+      .chart-head h3 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; }
+      .chart-total { font-size: 12px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
       .donut-wrap { position: relative; width: 120px; height: 120px; margin: 4px auto 6px; }
       .donut-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
       .donut-center strong { display: block; font-size: 24px; font-weight: 850; letter-spacing: -.04em; }
@@ -114,8 +109,8 @@ export function renderDashboard(): string {
       .hbars { display: grid; gap: 11px; margin-top: 2px; }
       .hbar-row { display: grid; gap: 5px; }
       .hbar-top { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
-      .hbar-top .st { font-weight: 700; }
-      .hbar-top .stx { margin-left: auto; font-size: 11px; font-weight: 800; }
+      .hbar-top .st { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .hbar-top .stx { margin-left: auto; padding-left: 8px; font-size: 11px; font-weight: 800; white-space: nowrap; }
       .hbar-track { height: 7px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
       .hbar-fill { height: 100%; border-radius: 999px; }
       .area-axis { display: flex; justify-content: space-between; margin-top: 6px; color: var(--ink-faint); font-size: 10px; font-variant-numeric: tabular-nums; }
@@ -361,12 +356,6 @@ export function renderDashboard(): string {
             </div>
           </section>
 
-          <section class="metrics" aria-label="프로젝트 관찰 요약">
-            <article class="card metric health-card" id="health-card"><div class="eyebrow">Project Health</div><strong class="metric-value" id="score">—</strong><span class="metric-note" id="headline">기준 확인 중</span></article>
-            <article class="card metric"><div class="eyebrow">핵심 산출물</div><strong class="metric-value" id="artifact-count">—</strong><span class="metric-note" id="artifact-note">지원 문서 분리 중</span></article>
-            <article class="card metric"><div class="eyebrow">Timeline</div><strong class="metric-value" id="timeline-count">—</strong><span class="metric-note">문서와 Git의 의미 단위 이벤트</span></article>
-            <article class="card metric"><div class="eyebrow">작업 중 변경</div><strong class="metric-value" id="change-count">—</strong><span class="metric-note">아직 commit되지 않은 경로</span></article>
-          </section>
 
           <section class="card panel">
             <div class="panel-head"><div><div class="eyebrow">Checklist</div><h2>프로젝트 점검</h2></div><span class="count" id="signal-count">확인 중</span></div>
@@ -539,6 +528,11 @@ export function renderDashboard(): string {
         });
       }
 
+      const healthLabels = {
+        'project-overview': '소개 문서', 'project-plan': '기획 문서', 'project-architecture': '설계 문서',
+        'git-repository': 'Git 저장소', 'git-history': '변경 이력',
+      };
+
       function renderHealthBars(health) {
         const box = element('health-bars');
         box.replaceChildren();
@@ -550,7 +544,7 @@ export function renderDashboard(): string {
           const top = text('div', 'hbar-top', '');
           const dot = text('span', 'sw', ''); dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:' + color;
           const stx = text('span', 'stx', levelText[sig.level] || '—'); stx.style.color = color;
-          top.append(dot, text('span', 'st', sig.title.replace(/(습니다|입니다)$/, '')), stx);
+          top.append(dot, text('span', 'st', healthLabels[sig.id] || sig.title), stx);
           const track = text('div', 'hbar-track', '');
           const fill = text('div', 'hbar-fill', '');
           fill.style.cssText = 'width:' + (sig.level === 'ready' ? 100 : sig.level === 'attention' ? 55 : 20) + '%;background:' + color;
@@ -895,7 +889,8 @@ export function renderDashboard(): string {
 
           element('name').textContent = identity.name;
           element('sidebar-project-name').textContent = identity.name;
-          element('root').textContent = identity.root;
+          const rootParts = identity.root.split('/').filter(Boolean);
+          element('root').textContent = (rootParts.length > 2 ? '…/' : '/') + rootParts.slice(-2).join('/');
           element('branch').textContent = identity.gitBranch ? 'Branch · ' + identity.gitBranch : 'Git 저장소 아님';
           element('head').textContent = identity.gitHead ? 'HEAD · ' + identity.gitHead : 'HEAD · —';
           element('scanned').textContent = '스캔 · ' + new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date(snapshot.scannedAt));
@@ -919,13 +914,6 @@ export function renderDashboard(): string {
             element('sidebar-cycle').textContent = '진행 중인 Cycle 없음';
           }
 
-          element('score').textContent = snapshot.health.score + '%';
-          element('headline').textContent = snapshot.health.headline;
-          element('artifact-count').textContent = String(projectArtifacts.length);
-          element('artifact-note').textContent = '지원 문서 ' + supportArtifacts.length + '개 별도 발견';
-          element('timeline-count').textContent = String(history.timelineCount);
-          element('change-count').textContent = String(observation.git.changedFiles.length);
-          element('health-card').className = 'card metric health-card ' + snapshot.health.status;
           element('nav-overview-count').textContent = snapshot.health.score + '%';
           element('nav-process-count').textContent = snapshot.process.currentStageId ? snapshot.process.currentStageId.toUpperCase() : 'Ready';
           element('nav-artifact-count').textContent = String(projectArtifacts.length);
