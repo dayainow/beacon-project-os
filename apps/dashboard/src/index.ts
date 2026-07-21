@@ -217,22 +217,18 @@ export function renderDashboard(): string {
       .cycle-deltas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
       .cycle-delta { border: 1px solid #e1e2e5; background: #fafafa; border-radius: 999px; padding: 5px 9px; font-size: 11px; color: var(--ink-soft); }
       .cycle-summary-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
-      .day-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-      .day-date { margin: 0; font-size: 15px; font-weight: 850; letter-spacing: -.02em; }
-      .day-total { color: var(--accent); font-size: 12px; font-weight: 800; white-space: nowrap; }
-      .day-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
-      .day-events { margin-top: 14px; }
-      .day-events > summary { list-style: none; cursor: pointer; color: var(--accent); font-size: 12px; font-weight: 800; user-select: none; }
-      .day-events > summary::-webkit-details-marker { display: none; }
-      .day-events > summary::before { content: '▸ '; }
-      .day-events[open] > summary::before { content: '▾ '; }
-      .day-event { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 11px 0; border-top: 1px solid #eeeef1; }
-      .day-event:first-of-type { margin-top: 10px; }
-      .day-event-title { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.4; }
-      .day-event-source { margin-top: 4px; color: #9699a1; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
-      .day-event-side { display: grid; justify-items: end; gap: 6px; white-space: nowrap; }
-      .day-event-time { color: var(--ink-faint); font-size: 11px; }
-      .day-category { border-radius: 999px; padding: 4px 9px; background: #f2efff; color: var(--accent); font-size: 11px; font-weight: 800; white-space: nowrap; }
+      .day-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 2px; }
+      .day-date { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: -.02em; }
+      .day-total { margin-left: auto; color: var(--ink-faint); font-size: 12px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .day-feed { position: relative; margin: 12px 0 0 5px; padding-left: 22px; }
+      .day-feed::before { content: ""; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; background: var(--line); border-radius: 2px; }
+      .day-event { position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 8px 0; }
+      .day-event::before { content: ""; position: absolute; left: -22px; top: 12px; width: 9px; height: 9px; border-radius: 50%; background: var(--dot, var(--ink-faint)); box-shadow: 0 0 0 3px var(--surface); }
+      .day-event-title { margin: 0; font-size: 13.5px; font-weight: 700; line-height: 1.45; }
+      .day-event-source { margin-top: 3px; color: var(--ink-faint); font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+      .day-event-side { display: flex; align-items: center; gap: 8px; white-space: nowrap; flex: none; }
+      .day-event-cat { font-size: 11px; font-weight: 800; color: var(--catink, var(--ink-faint)); }
+      .day-event-time { color: var(--ink-faint); font-size: 11px; font-variant-numeric: tabular-nums; }
       .empty { padding: 28px 24px; color: var(--ink-faint); font-size: 13px; }
       .error { margin-bottom: 12px; padding: 20px; background: #fff0f1; color: #9d1f2c; border: 1px solid #f3c9ce; border-radius: 14px; }
       .nav-guide { margin-top: 6px; }
@@ -457,6 +453,8 @@ export function renderDashboard(): string {
       const kindLabels = { overview: '개요', planning: '기획', architecture: '설계', quality: '검증', release: '릴리스', document: '문서' };
       const levelLabels = { warning: '보완 권장', attention: '확인 권장', ready: '완료' };
       const categoryLabels = { planning: '기획', design: '설계', implementation: '기능', issue: '문제 해결', quality: '검증', delivery: '릴리스', operations: '운영', documentation: '문서', change: '변경' };
+      // category별 점 색 (라벨과 함께 쓰이므로 색만으로 구분하지 않음)
+      const categoryColors = { implementation: '#5b43ff', planning: '#2f9bd8', design: '#2f9bd8', quality: '#0ea371', delivery: '#8b5cf6', issue: '#d64550', operations: '#8b8f99', documentation: '#8b8f99', change: '#8b8f99' };
       const changeLabels = { added: '추가', modified: '변경', deleted: '삭제' };
       const stageStateLabels = { ready: '준비됨', current: '지금 여기', upcoming: '아직' };
       const stageHints = {
@@ -754,26 +752,24 @@ export function renderDashboard(): string {
         const label = new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(new Date(day.date + 'T00:00:00Z'));
         top.append(text('p', 'day-date', label), text('span', 'day-total', day.total + '건'));
         item.append(top);
-        const categories = text('div', 'day-categories', '');
-        Object.keys(day.categoryCounts).forEach((category) => {
-          categories.append(text('span', 'day-category', (categoryLabels[category] || '변경') + ' ' + day.categoryCounts[category]));
-        });
-        item.append(categories);
 
-        const details = text('details', 'day-events', '');
-        details.append(text('summary', '', '이 날 한 일 ' + day.total + '건 보기'));
+        const feed = text('div', 'day-feed', '');
         day.events.forEach((event) => {
+          const color = categoryColors[event.category] || 'var(--ink-faint)';
           const row = text('div', 'day-event', '');
+          row.style.setProperty('--dot', color);
           const content = text('div', '', '');
           content.append(text('p', 'day-event-title', event.title));
-          content.append(text('div', 'day-event-source', '근거 · ' + event.source + ':' + event.reference));
+          content.append(text('div', 'day-event-source', event.source + ':' + event.reference));
           const side = text('div', 'day-event-side', '');
+          const cat = text('span', 'day-event-cat', categoryLabels[event.category] || '변경');
+          cat.style.setProperty('--catink', color);
           const time = new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(new Date(event.occurredAt));
-          side.append(text('span', 'timeline-category', categoryLabels[event.category] || '변경'), text('span', 'day-event-time', time));
+          side.append(cat, text('span', 'day-event-time', time));
           row.append(content, side);
-          details.append(row);
+          feed.append(row);
         });
-        item.append(details);
+        item.append(feed);
         return item;
       }
 
