@@ -76,6 +76,7 @@ test("combines document changes and commits into a categorized chronological tim
       recentCommits: [{
         hash: "abcdef0123456789",
         shortHash: "abcdef0",
+        author: "Tester",
         authoredAt: "2026-07-15T11:00:00.000Z",
         subject: "fix: resolve scanner boundary",
         paths: ["docs/PRODUCT.md", "packages/core/src/scanner.ts"],
@@ -181,6 +182,7 @@ test("categorizes common non-conventional commit subjects", () => {
       recentCommits: subjects.map((subject, index) => ({
         hash: `abcdef${index}123456789`,
         shortHash: `abcdef${index}`,
+        author: "Tester",
         authoredAt: `2026-07-15T1${index}:00:00.000Z`,
         subject,
         paths: ["src/index.ts"],
@@ -218,6 +220,7 @@ test("categorizes more non-conventional subjects while keeping ambiguous ones as
       recentCommits: cases.map(([subject], index) => ({
         hash: `feed${index}00000000000`,
         shortHash: `feed${index}`,
+        author: "Tester",
         authoredAt: `2026-07-15T${String(10 + index).padStart(2, "0")}:00:00.000Z`,
         subject,
         paths: ["src/index.ts"],
