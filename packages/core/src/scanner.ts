@@ -63,7 +63,9 @@ const CONFIG_NAMES = new Set([
 ]);
 
 const MAX_FILES = 10_000;
-const MAX_GIT_COMMITS = 20;
+// 판정(단계·Gate)이 시점에 따라 흔들리지 않도록 충분한 이력을 관찰한다.
+// Timeline 표시는 MAX_TIMELINE_EVENTS로, 누적은 History(SQLite)로 제한하므로 이 값이 커도 UI는 폭발하지 않는다.
+const MAX_GIT_COMMITS = 500;
 const MAX_TIMELINE_EVENTS = 30;
 
 function isGeneratedProjectBook(relativePath: string): boolean {
@@ -250,7 +252,25 @@ function isTestSource(relativePath: string): boolean {
     || /\.(spec|test)\.[^.]+$/.test(lower);
 }
 
-async function scanFiles(root: string): Promise<FileObservation> {
+// git 저장소면 .gitignore로 무시되는 디렉토리를 모아 스캔에서 함께 제외한다.
+// (git이 아니거나 실패하면 빈 집합 — 기존 하드코딩 목록만 적용, 하위 호환)
+function collectIgnoredDirectories(root: string): Set<string> {
+  const output = git(
+    root,
+    ["ls-files", "--others", "--ignored", "--exclude-standard", "--directory", "-z"],
+    true,
+  );
+  if (!output) return new Set();
+  const ignored = new Set<string>();
+  for (const entry of output.split("\0")) {
+    if (!entry) continue;
+    // git은 무시된 디렉토리를 뒤에 "/"를 붙여 알려준다. 그 경로를 정규화해 담는다.
+    if (entry.endsWith("/")) ignored.add(entry.slice(0, -1).replace(/\\/g, "/"));
+  }
+  return ignored;
+}
+
+async function scanFiles(root: string, ignoredDirs: Set<string> = new Set()): Promise<FileObservation> {
   const artifacts: DiscoveredArtifact[] = [];
   let total = 0;
   let source = 0;
@@ -278,7 +298,8 @@ async function scanFiles(root: string): Promise<FileObservation> {
 
       const absolutePath = path.join(directory, entry.name);
       if (entry.isDirectory()) {
-        if (!IGNORED_DIRECTORIES.has(entry.name)) await visit(absolutePath);
+        const relativeDir = toProjectPath(path.relative(root, absolutePath));
+        if (!IGNORED_DIRECTORIES.has(entry.name) && !ignoredDirs.has(relativeDir)) await visit(absolutePath);
         continue;
       }
 
@@ -676,8 +697,9 @@ export function groupTimelineByDay(events: TimelineEvent[]): TimelineDay[] {
 
 export async function scanProject(root: string, now = new Date()): Promise<ProjectSnapshot> {
   const resolvedRoot = path.resolve(root);
+  const ignoredDirs = collectIgnoredDirectories(resolvedRoot);
   const [files, gitObservation] = await Promise.all([
-    scanFiles(resolvedRoot),
+    scanFiles(resolvedRoot, ignoredDirs),
     Promise.resolve(scanGit(resolvedRoot)),
   ]);
   const observation = { files, git: gitObservation };
