@@ -154,6 +154,11 @@ export function renderDashboard(): string {
       .requirement.satisfied .requirement-dot { background: #e7f6ef; color: #0f9d6a; }
       .requirement-title { margin: 0; font-size: 13.5px; font-weight: 800; }
       .requirement-evidence { margin: 4px 0 0; color: var(--ink-faint); font-size: 11.5px; line-height: 1.45; }
+      .requirement-why { margin: 4px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+      .requirement-found { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .req-file { border: 1px solid #cdeeda; background: #f2fbf6; color: #0a6b47; border-radius: 7px; padding: 3px 9px; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; }
+      .req-file:hover { border-color: #0f9d6a; text-decoration: underline; }
+      .req-file-plain { border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-soft); border-radius: 7px; padding: 3px 9px; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
       .requirement-action { color: var(--accent); font-size: 11.5px; line-height: 1.5; text-align: right; max-width: 290px; }
       .requirement.satisfied .requirement-action { color: #0f9d6a; font-weight: 700; }
       .layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 12px; }
@@ -413,7 +418,7 @@ export function renderDashboard(): string {
               <h3 id="gate-title">단계를 확인하고 있어요.</h3>
               <p class="gate-objective" id="gate-objective"></p>
               <div class="requirements" id="requirements"></div>
-              <p class="gate-foot">자동 관찰 결과일 뿐, 사람의 최종 판단(GO·HOLD·KILL)을 대신하지 않습니다.</p>
+              <p class="gate-foot">Beacon은 폴더를 읽어 "무엇이 준비됐나"만 알려줘요. 이 단계를 통과시킬지 말지는 사람이 판단합니다.</p>
             </div>
           </section>
         </div>
@@ -516,7 +521,7 @@ export function renderDashboard(): string {
       };
       const views = {
         overview: { title: '프로젝트 개요', description: '현재 Cycle과 프로젝트 점검 결과를 확인합니다.' },
-        process: { title: '단계와 Gate', description: 'P0–P4 단계별 준비 근거와 다음 행동을 확인합니다.' },
+        process: { title: '단계와 Gate', description: '기획부터 배포까지 5단계 중 지금 어디까지 왔고, 각 단계에 뭐가 필요한지 봅니다.' },
         artifacts: { title: '프로젝트 산출물', description: '파일에서 자동으로 발견한 핵심 결과물을 확인합니다.' },
         history: { title: '프로젝트 히스토리', description: '작업의 의미 흐름과 스캔 사이의 변화를 확인합니다.' },
         guide: { title: '사용 가이드', description: 'Beacon을 처음부터 어떻게 쓰는지 단계별로 안내합니다.' },
@@ -1032,13 +1037,44 @@ export function renderDashboard(): string {
         element('requirements').replaceChildren(...stage.gate.requirements.map(renderRequirement));
       }
 
+      // 각 요구조건이 "왜 이 단계에 필요한지" 한 줄 설명.
+      const requirementWhy = {
+        'p0-overview': '팀원이 프로젝트가 뭔지·어떻게 시작하는지 알 수 있어야 해요.',
+        'p0-plan': '무엇을·왜 만드는지 기준이 있어야 방향이 흔들리지 않아요.',
+        'p1-architecture': '구조와 중요한 결정을 적어두면 나중에 근거를 되짚을 수 있어요.',
+        'p2-source': '실제로 돌아가는 코드가 있어야 개발이 시작된 거예요.',
+        'p2-history': 'commit으로 남겨야 무엇을 언제 바꿨는지 추적돼요.',
+        'p3-evidence': '테스트나 검증 문서가 있어야 "된다"고 말할 수 있어요.',
+        'p4-release': '릴리스 문서가 있어야 무엇을 어떤 버전으로 내보냈는지 남아요.',
+      };
+      const viewableExtRe = /\\.(md|mdx|txt)$/i;
+
       function renderRequirement(requirement) {
         const item = text('div', 'requirement' + (requirement.satisfied ? ' satisfied' : ''), '');
         const content = text('div', '', '');
         content.append(text('p', 'requirement-title', requirement.label));
-        content.append(text('p', 'requirement-evidence', requirement.evidence.join(' · ')));
+        if (requirementWhy[requirement.id]) content.append(text('p', 'requirement-why', requirementWhy[requirement.id]));
+
+        if (requirement.satisfied) {
+          // 실제로 발견된 문서를 보여주고, 텍스트 문서는 바로 열 수 있게.
+          const found = text('div', 'requirement-found', '');
+          requirement.sources.forEach((src) => {
+            if (viewableExtRe.test(src)) {
+              const btn = text('button', 'req-file', src);
+              btn.type = 'button';
+              btn.addEventListener('click', () => openFileViewer(src, src.split('/').pop()));
+              found.append(btn);
+            } else {
+              found.append(text('span', 'req-file-plain', src));
+            }
+          });
+          content.append(found);
+        } else {
+          content.append(text('p', 'requirement-evidence', requirement.evidence.join(' · ')));
+        }
+
         item.append(text('span', 'requirement-dot', requirement.satisfied ? '✓' : '!'), content);
-        item.append(text('span', 'requirement-action', requirement.satisfied ? '확인됨' : requirement.nextAction));
+        item.append(text('span', 'requirement-action', requirement.satisfied ? '준비됨' : requirement.nextAction));
         return item;
       }
 
