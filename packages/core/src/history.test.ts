@@ -22,6 +22,7 @@ function commit(hash: string, subject: string): GitCommit {
   return {
     hash,
     shortHash: hash.slice(0, 7),
+    author: "Tester",
     authoredAt: "2026-07-15T10:00:00.000Z",
     subject,
     paths: ["README.md"],

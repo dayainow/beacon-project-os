@@ -258,6 +258,8 @@ export function renderDashboard(): string {
       .issue-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--idot, var(--ink-faint)); }
       .issue-title { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .issue-cat { margin-left: auto; font-size: 10px; font-weight: 800; color: var(--idot, var(--ink-faint)); white-space: nowrap; }
+      .issue-author { font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+      .issue-author::before { content: "· "; color: var(--ink-faint); }
       .issue-hash { font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-faint); white-space: nowrap; }
       .task { display: flex; align-items: center; gap: 8px; padding: 5px 0 5px 22px; font: 11.5px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-soft); overflow-wrap: anywhere; }
       .task::before { content: "└"; color: var(--ink-faint); flex: none; }
@@ -855,7 +857,8 @@ export function renderDashboard(): string {
         const content = text('div', '', '');
         content.append(text('p', 'timeline-title', event.title), text('p', 'signal-detail', event.detail));
         if (event.relatedArtifacts.length) content.append(text('div', 'artifact-path', '문서 · ' + event.relatedArtifacts.join(', ')));
-        content.append(text('div', 'source', '근거 · ' + event.source + ':' + event.reference));
+        const src = '근거 · ' + event.source + ':' + event.reference + (event.author ? ' · ' + event.author : '');
+        content.append(text('div', 'source', src));
         const side = text('div', 'timeline-side', '');
         const date = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(event.occurredAt));
         side.append(text('span', 'timeline-category', categoryLabels[event.category] || '변경'), text('span', 'timeline-meta', date));
@@ -955,7 +958,9 @@ export function renderDashboard(): string {
         const summary = text('summary', '', '');
         summary.append(text('span', 'issue-caret', '▶'), text('span', 'issue-dot', ''));
         summary.append(text('span', 'issue-title', commit.subject));
-        summary.append(text('span', 'issue-cat', categoryLabels[cat] || '변경'), text('span', 'issue-hash', commit.shortHash));
+        summary.append(text('span', 'issue-cat', categoryLabels[cat] || '변경'));
+        if (commit.author) summary.append(text('span', 'issue-author', commit.author));
+        summary.append(text('span', 'issue-hash', commit.shortHash));
         details.append(summary);
         const paths = (commit.paths || []).filter(Boolean);
         if (paths.length === 0) details.append(text('div', 'task', '변경 파일 정보 없음'));

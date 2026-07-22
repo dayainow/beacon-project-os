@@ -117,6 +117,7 @@ export interface GitChange {
 export interface GitCommit {
   hash: string;
   shortHash: string;
+  author: string;
   authoredAt: string;
   subject: string;
   paths: string[];
@@ -180,6 +181,7 @@ export interface TimelineEvent {
   source: string;
   reference: string;
   relatedArtifacts: string[];
+  author?: string;
 }
 
 export interface ProjectTimeline {
@@ -385,10 +387,11 @@ function parseGitCommits(value: string | null): GitCommit[] {
     .filter(Boolean)
     .map((record) => {
       const [header, ...pathLines] = record.split(/\r?\n/);
-      const [hash, shortHash, authoredAt, ...subject] = header.split("\u001f");
+      const [hash, shortHash, author, authoredAt, ...subject] = header.split("\u001f");
       return {
         hash,
         shortHash,
+        author: author ?? "",
         authoredAt,
         subject: subject.join("\u001f"),
         paths: pathLines
@@ -427,7 +430,7 @@ function scanGit(root: string): GitObservation {
       "-n",
       String(MAX_GIT_COMMITS),
       "--date=iso-strict",
-      "--pretty=format:%x1e%H%x1f%h%x1f%aI%x1f%s",
+      "--pretty=format:%x1e%H%x1f%h%x1f%an%x1f%aI%x1f%s",
       "--name-only",
     ])),
   };
@@ -655,6 +658,7 @@ export function buildProjectTimeline(observation: ProjectObservation): ProjectTi
       source: "git",
       reference: commit.shortHash,
       relatedArtifacts,
+      author: commit.author,
     };
   });
 

@@ -29,6 +29,7 @@ function observation(kinds: ArtifactKind[], options: { source?: number; tests?: 
       recentCommits: Array.from({ length: options.commits ?? 0 }, (_, index) => ({
         hash: `abcdef${index}123456789`,
         shortHash: `abcdef${index}`,
+        author: "Tester",
         authoredAt: "2026-07-15T10:00:00.000Z",
         subject: "feat: implementation",
         paths: ["src/index.ts"],
