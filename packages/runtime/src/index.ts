@@ -1,7 +1,41 @@
 import { readProjectIdentity, readProjectJourney, scanProject } from "@beacon/core";
 import { renderDashboard } from "@beacon/dashboard";
+import { readFile, stat } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
+import path from "node:path";
 import { ProjectHistoryStore } from "./historyStore.js";
+
+const VIEWABLE_TEXT_EXTENSIONS = new Set([".md", ".mdx", ".txt"]);
+const MAX_VIEWABLE_BYTES = 512 * 1024;
+
+// 프로젝트 루트 안의 텍스트 문서만 안전하게 읽는다. 경로 이탈·내부 경로·바이너리를 차단한다.
+async function readViewableFile(
+  root: string,
+  relativePath: string,
+): Promise<{ ok: true; content: string } | { ok: false; status: number; error: string }> {
+  const resolvedRoot = path.resolve(root);
+  const target = path.resolve(resolvedRoot, relativePath);
+  const relative = path.relative(resolvedRoot, target);
+  // 루트 밖으로 나가거나 절대경로면 거부 (path traversal 차단).
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    return { ok: false, status: 403, error: "path_out_of_project" };
+  }
+  const normalized = relative.split(path.sep).join("/");
+  if (normalized === ".beacon" || normalized.startsWith(".beacon/") || normalized === ".git" || normalized.startsWith(".git/")) {
+    return { ok: false, status: 403, error: "internal_path" };
+  }
+  if (!VIEWABLE_TEXT_EXTENSIONS.has(path.extname(target).toLowerCase())) {
+    return { ok: false, status: 415, error: "not_a_text_document" };
+  }
+  try {
+    const info = await stat(target);
+    if (!info.isFile()) return { ok: false, status: 404, error: "not_a_file" };
+    if (info.size > MAX_VIEWABLE_BYTES) return { ok: false, status: 413, error: "file_too_large" };
+    return { ok: true, content: await readFile(target, "utf8") };
+  } catch {
+    return { ok: false, status: 404, error: "file_not_found" };
+  }
+}
 
 export { ProjectHistoryStore } from "./historyStore.js";
 export type { ProjectHistory, SnapshotRecordResult, StoredProjectChange } from "./historyStore.js";
@@ -96,6 +130,18 @@ export async function startBeaconRuntime({
           message: error instanceof Error ? error.message : "unknown error",
         });
       }
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/file") {
+      const requestedPath = requestUrl.searchParams.get("path") ?? "";
+      if (!requestedPath) {
+        sendJson(response, 400, { error: "path_required" });
+        return;
+      }
+      const result = await readViewableFile(root, requestedPath);
+      if (result.ok) sendJson(response, 200, { path: requestedPath, content: result.content });
+      else sendJson(response, result.status, { error: result.error });
       return;
     }
 

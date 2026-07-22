@@ -204,6 +204,30 @@ export function renderDashboard(): string {
       .agroup-empty { padding: 4px 24px 14px; color: #b0b4bc; font-size: 12.5px; }
       .afile { display: flex; align-items: baseline; gap: 12px; padding: 9px 24px; border-top: 1px solid #f4f4f7; }
       .afile-name { font-size: 13.5px; font-weight: 700; flex: none; }
+      .afile-open { border: 0; background: none; padding: 0; cursor: pointer; color: var(--accent-ink); text-align: left; }
+      .afile-open:hover { text-decoration: underline; }
+      .viewer-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px; background: rgb(20 22 28 / 42%); backdrop-filter: blur(2px); }
+      .viewer-backdrop[hidden] { display: none; }
+      .viewer-card { width: min(820px, 100%); max-height: 86vh; display: flex; flex-direction: column; background: var(--surface); border-radius: 18px; box-shadow: 0 24px 60px rgb(20 22 28 / 28%); overflow: hidden; }
+      .viewer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 24px 16px; border-bottom: 1px solid var(--line); }
+      .viewer-head h2 { margin: 5px 0 0; font-size: 18px; letter-spacing: -.02em; }
+      .viewer-path { margin-top: 5px; color: var(--ink-faint); font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+      .viewer-close { flex: none; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 14px; cursor: pointer; }
+      .viewer-close:hover { border-color: var(--accent); color: var(--ink); }
+      .viewer-body { overflow: auto; padding: 22px 26px 28px; }
+      .viewer-body.loading, .viewer-body.error { color: var(--ink-faint); font-size: 14px; }
+      .md h1, .md h2, .md h3 { letter-spacing: -.02em; line-height: 1.3; margin: 20px 0 8px; }
+      .md h1 { font-size: 22px; } .md h2 { font-size: 18px; } .md h3 { font-size: 15px; }
+      .md p { margin: 10px 0; line-height: 1.7; color: var(--ink-soft); font-size: 14px; }
+      .md ul, .md ol { margin: 10px 0; padding-left: 22px; color: var(--ink-soft); font-size: 14px; line-height: 1.7; }
+      .md li { margin: 3px 0; }
+      .md code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+      .md pre { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; margin: 12px 0; }
+      .md pre code { background: none; padding: 0; }
+      .md blockquote { margin: 12px 0; padding: 6px 14px; border-left: 3px solid var(--line); color: var(--ink-faint); }
+      .md a { color: var(--accent-ink); }
+      .md hr { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
+      .md .md-plain { white-space: pre-wrap; font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-soft); line-height: 1.6; }
       .afile-path { color: var(--ink-faint); font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; margin-left: auto; text-align: right; }
       .support-wrap { border-top: 1px solid var(--line); margin-top: 4px; }
       .support-wrap > summary { list-style: none; cursor: pointer; padding: 14px 24px; color: var(--ink-faint); font-size: 12.5px; font-weight: 700; user-select: none; }
@@ -464,6 +488,16 @@ export function renderDashboard(): string {
         </div>
       </main>
     </div>
+
+    <div class="viewer-backdrop" id="viewer" hidden>
+      <div class="viewer-card" role="dialog" aria-modal="true" aria-labelledby="viewer-title">
+        <div class="viewer-head">
+          <div><div class="eyebrow">문서 보기</div><h2 id="viewer-title">—</h2><div class="viewer-path" id="viewer-path"></div></div>
+          <button class="viewer-close" id="viewer-close" type="button" aria-label="닫기">✕</button>
+        </div>
+        <div class="viewer-body" id="viewer-body"></div>
+      </div>
+    </div>
     <script>
       const element = (id) => document.getElementById(id);
       const kindLabels = { overview: '개요', planning: '기획', architecture: '설계', quality: '검증', release: '릴리스', document: '문서' };
@@ -687,9 +721,92 @@ export function renderDashboard(): string {
       const artifactKindOrder = ['overview', 'planning', 'architecture', 'quality', 'release', 'document'];
       const artifactKindStage = { overview: 'P0', planning: 'P0', architecture: 'P1', quality: 'P3', release: 'P4', document: null };
 
+      const viewableExt = /\\.(md|mdx|txt)$/i;
+
+      // 안전한 Markdown → DOM 렌더 (createElement/createTextNode만 사용). 인라인은 굵게·코드만 최소 처리.
+      function appendInline(node, str) {
+        const re = /(\\*\\*[^*]+\\*\\*|\`[^\`]+\`)/g;
+        let last = 0, m;
+        while ((m = re.exec(str))) {
+          if (m.index > last) node.append(document.createTextNode(str.slice(last, m.index)));
+          const tok = m[0];
+          if (tok.startsWith('\`')) node.append(text('code', '', tok.slice(1, -1)));
+          else node.append(text('strong', '', tok.slice(2, -2)));
+          last = m.index + tok.length;
+        }
+        if (last < str.length) node.append(document.createTextNode(str.slice(last)));
+      }
+
+      function renderMarkdown(box, source, isMarkdown) {
+        box.replaceChildren();
+        if (!isMarkdown) {
+          const pre = text('div', 'md-plain', source);
+          box.append(pre);
+          return;
+        }
+        const lines = source.replace(/\\r\\n/g, '\\n').split('\\n');
+        let i = 0, list = null;
+        const closeList = () => { if (list) { box.append(list); list = null; } };
+        while (i < lines.length) {
+          const line = lines[i];
+          if (/^\`\`\`/.test(line)) {
+            closeList();
+            const buf = [];
+            i += 1;
+            while (i < lines.length && !/^\`\`\`/.test(lines[i])) { buf.push(lines[i]); i += 1; }
+            i += 1;
+            const pre = text('pre', '', ''); pre.append(text('code', '', buf.join('\\n')));
+            box.append(pre);
+            continue;
+          }
+          const h = line.match(/^(#{1,3})\\s+(.*)$/);
+          if (h) { closeList(); const el = text('h' + h[1].length, '', ''); appendInline(el, h[2]); box.append(el); i += 1; continue; }
+          if (/^>\\s?/.test(line)) { closeList(); const q = text('blockquote', '', ''); appendInline(q, line.replace(/^>\\s?/, '')); box.append(q); i += 1; continue; }
+          if (/^(-{3,}|\\*{3,})$/.test(line.trim())) { closeList(); box.append(text('hr', '', '')); i += 1; continue; }
+          const li = line.match(/^\\s*[-*+]\\s+(.*)$/) || line.match(/^\\s*\\d+\\.\\s+(.*)$/);
+          if (li) { if (!list) list = text('ul', '', ''); const item = text('li', '', ''); appendInline(item, li[1]); list.append(item); i += 1; continue; }
+          if (line.trim() === '') { closeList(); i += 1; continue; }
+          closeList();
+          const p = text('p', '', ''); appendInline(p, line); box.append(p);
+          i += 1;
+        }
+        closeList();
+      }
+
+      async function openFileViewer(path, name) {
+        const viewer = element('viewer');
+        element('viewer-title').textContent = name;
+        element('viewer-path').textContent = path;
+        const body = element('viewer-body');
+        body.className = 'viewer-body loading';
+        body.replaceChildren(document.createTextNode('문서를 불러오는 중…'));
+        viewer.hidden = false;
+        try {
+          const res = await fetch('/api/file?path=' + encodeURIComponent(path), { cache: 'no-store' });
+          if (!res.ok) throw new Error('load failed');
+          const data = await res.json();
+          body.className = 'viewer-body md';
+          renderMarkdown(body, data.content, /\.(md|mdx)$/i.test(name));
+        } catch {
+          body.className = 'viewer-body error';
+          body.replaceChildren(document.createTextNode('문서를 불러오지 못했어요. 파일이 프로젝트 폴더 안에 있는지 확인해 주세요.'));
+        }
+      }
+
+      function closeFileViewer() { element('viewer').hidden = true; }
+
       function renderArtifactFile(artifact) {
         const row = text('div', 'afile', '');
-        row.append(text('span', 'afile-name', artifact.name), text('span', 'afile-path', artifact.path));
+        const canView = viewableExt.test(artifact.name);
+        if (canView) {
+          const btn = text('button', 'afile-name afile-open', artifact.name);
+          btn.type = 'button';
+          btn.addEventListener('click', () => openFileViewer(artifact.path, artifact.name));
+          row.append(btn);
+        } else {
+          row.append(text('span', 'afile-name', artifact.name));
+        }
+        row.append(text('span', 'afile-path', artifact.path));
         return row;
       }
 
@@ -815,7 +932,7 @@ export function renderDashboard(): string {
       }
 
       function commitCategory(subject) {
-        const m = subject.match(/^([a-z]+)(?:\([^)]*\))?!?:/i);
+        const m = subject.match(/^([a-z]+)(?:\\([^)]*\\))?!?:/i);
         const t = m ? m[1].toLowerCase() : '';
         if (t === 'feat' || t === 'refactor' || t === 'perf') return 'implementation';
         if (t === 'fix' || t === 'revert') return 'issue';
@@ -1031,6 +1148,9 @@ export function renderDashboard(): string {
       }
 
       element('refresh').addEventListener('click', loadProject);
+      element('viewer-close').addEventListener('click', closeFileViewer);
+      element('viewer').addEventListener('click', (event) => { if (event.target === element('viewer')) closeFileViewer(); });
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !element('viewer').hidden) closeFileViewer(); });
       document.querySelectorAll('[data-view-link]').forEach((link) => {
         link.addEventListener('click', () => {
           if (window.location.hash === link.getAttribute('href')) activateView(true);
