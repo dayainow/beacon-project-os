@@ -219,6 +219,20 @@ export function renderDashboard(): string {
       .cycle-deltas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
       .cycle-delta { border: 1px solid #e1e2e5; background: #fafafa; border-radius: 999px; padding: 5px 9px; font-size: 11px; color: var(--ink-soft); }
       .cycle-summary-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 9px; background: #f7f5ff; color: #514875; font-size: 12px; line-height: 1.5; }
+      .epic-tree { margin-top: 14px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+      .epic-tree-label { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 8px; }
+      .issue { border-left: 2px solid var(--line); margin-left: 3px; padding-left: 14px; }
+      .issue > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 7px 0; user-select: none; }
+      .issue > summary::-webkit-details-marker { display: none; }
+      .issue-caret { color: var(--ink-faint); font-size: 10px; transition: transform .15s ease; flex: none; }
+      .issue[open] .issue-caret { transform: rotate(90deg); }
+      .issue-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--idot, var(--ink-faint)); }
+      .issue-title { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .issue-cat { margin-left: auto; font-size: 10px; font-weight: 800; color: var(--idot, var(--ink-faint)); white-space: nowrap; }
+      .issue-hash { font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-faint); white-space: nowrap; }
+      .task { display: flex; align-items: center; gap: 8px; padding: 5px 0 5px 22px; font: 11.5px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-soft); overflow-wrap: anywhere; }
+      .task::before { content: "└"; color: var(--ink-faint); flex: none; }
+      .epic-empty { font-size: 12px; color: var(--ink-faint); padding: 4px 0 2px; }
       .day-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 2px; }
       .day-date { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: -.02em; }
       .day-total { margin-left: auto; color: var(--ink-faint); font-size: 12px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -789,6 +803,44 @@ export function renderDashboard(): string {
         return stageId ? String(stageId).toUpperCase() : '완료';
       }
 
+      let allCommits = [];
+
+      // 에픽(Cycle) 기간에 속한 commit(이슈)을 시각순으로 고른다.
+      function commitsForCycle(cycle) {
+        const start = Date.parse(cycle.startedAt);
+        const end = cycle.completedAt ? Date.parse(cycle.completedAt) : Infinity;
+        return allCommits
+          .filter((c) => { const t = Date.parse(c.authoredAt); return t >= start && t <= end; })
+          .sort((a, b) => Date.parse(b.authoredAt) - Date.parse(a.authoredAt));
+      }
+
+      function commitCategory(subject) {
+        const m = subject.match(/^([a-z]+)(?:\([^)]*\))?!?:/i);
+        const t = m ? m[1].toLowerCase() : '';
+        if (t === 'feat' || t === 'refactor' || t === 'perf') return 'implementation';
+        if (t === 'fix' || t === 'revert') return 'issue';
+        if (t === 'test') return 'quality';
+        if (t === 'docs') return 'documentation';
+        if (t === 'chore' || t === 'build' || t === 'ci') return 'operations';
+        return 'change';
+      }
+
+      function renderIssue(commit) {
+        const cat = commitCategory(commit.subject);
+        const color = categoryColors[cat] || 'var(--ink-faint)';
+        const details = text('details', 'issue', '');
+        details.style.setProperty('--idot', color);
+        const summary = text('summary', '', '');
+        summary.append(text('span', 'issue-caret', '▶'), text('span', 'issue-dot', ''));
+        summary.append(text('span', 'issue-title', commit.subject));
+        summary.append(text('span', 'issue-cat', categoryLabels[cat] || '변경'), text('span', 'issue-hash', commit.shortHash));
+        details.append(summary);
+        const paths = (commit.paths || []).filter(Boolean);
+        if (paths.length === 0) details.append(text('div', 'task', '변경 파일 정보 없음'));
+        else paths.forEach((p) => details.append(text('div', 'task', p)));
+        return details;
+      }
+
       function renderCycle(cycle) {
         const item = text('li', 'list-item', '');
         const top = text('div', 'signal-top', '');
@@ -813,6 +865,14 @@ export function renderDashboard(): string {
           item.append(deltas);
         }
         if (cycle.summary) item.append(text('p', 'cycle-summary-note', '요약 · ' + cycle.summary));
+
+        const issues = commitsForCycle(cycle);
+        const tree = text('div', 'epic-tree', '');
+        tree.append(text('div', 'epic-tree-label', '이슈 ' + issues.length + '개 · 커밋을 펼치면 바뀐 파일이 보여요'));
+        if (issues.length === 0) tree.append(text('div', 'epic-empty', '이 마일스톤 기간에 기록된 커밋이 아직 없어요.'));
+        else issues.forEach((c) => tree.append(renderIssue(c)));
+        item.append(tree);
+
         item.append(text('div', 'source', '기간 · ' + period));
         return item;
       }
@@ -953,6 +1013,7 @@ export function renderDashboard(): string {
           replaceList('daily', days, renderDay, '아직 기록된 작업이 없어요. commit하거나 문서를 저장하면 여기에 쌓입니다.');
           replaceList('changes', history.changes, renderChange, '첫 스캔은 기준선으로 저장돼요. 다음 스캔부터 추가·변경·삭제가 여기 쌓입니다.');
           element('tab-detail-count').textContent = String(history.timeline.length);
+          allCommits = observation.git.recentCommits || [];
           const orderedCycles = [...journey.cycles].sort((left, right) => right.sequence - left.sequence);
           element('cycle-log-label').textContent = orderedCycles.length + '개';
           element('tab-cycle-count').textContent = String(orderedCycles.length);
