@@ -127,7 +127,9 @@ export function renderDashboard(): string {
       .progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #7c6cff, var(--accent)); transition: width .5s ease; width: 0; }
       .progress-text { font-size: 12px; font-weight: 800; color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
       .stage-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding: 18px 24px; }
-      .stage { position: relative; min-height: 132px; border: 1px solid #e2e3e6; border-radius: 13px; padding: 15px; background: #fafafa; display: flex; flex-direction: column; }
+      .stage { position: relative; min-height: 132px; border: 1px solid #e2e3e6; border-radius: 13px; padding: 15px; background: #fafafa; display: flex; flex-direction: column; text-align: left; font: inherit; color: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+      .stage:hover { transform: translateY(-2px); }
+      .stage.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 10px 24px rgb(91 67 255 / 14%); }
       .stage.ready { border-color: #bdebd7; background: #effbf5; }
       .stage.current { border-color: #8f7fff; background: #f6f3ff; box-shadow: 0 0 0 1px #8f7fff, 0 8px 22px rgb(91 67 255 / 12%); }
       .stage-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -815,8 +817,14 @@ export function renderDashboard(): string {
         return item;
       }
 
+      let processStages = [];
+      let selectedStageId = null;
+
       function renderStage(stage) {
-        const item = text('div', 'stage ' + stage.state, '');
+        const item = text('button', 'stage ' + stage.state, '');
+        item.type = 'button';
+        item.dataset.stageId = stage.id;
+        item.setAttribute('aria-pressed', 'false');
         const top = text('div', 'stage-top', '');
         const iconChar = stage.state === 'ready' ? '✓' : stage.state === 'current' ? '●' : '';
         top.append(text('span', 'stage-code', stage.id.toUpperCase()), text('span', 'stage-icon', iconChar));
@@ -824,7 +832,27 @@ export function renderDashboard(): string {
         item.append(text('strong', 'stage-name', stage.name));
         item.append(text('span', 'stage-hint', stageHints[stage.id] || ''));
         item.append(text('span', 'stage-state', stageStateLabels[stage.state] + ' · ' + stage.gate.satisfiedRequirements + '/' + stage.gate.totalRequirements));
+        item.addEventListener('click', () => showStageDetail(stage.id));
         return item;
+      }
+
+      function showStageDetail(stageId) {
+        const stage = processStages.find((s) => s.id === stageId) || processStages.at(-1);
+        if (!stage) return;
+        selectedStageId = stage.id;
+        document.querySelectorAll('.stage').forEach((el) => {
+          const on = el.dataset.stageId === stage.id;
+          el.classList.toggle('selected', on);
+          el.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        const isCurrent = stage.state === 'current';
+        const isReady = stage.state === 'ready';
+        element('gate-eyebrow').textContent = isCurrent ? '지금 확인할 단계' : isReady ? '준비된 단계' : '아직 남은 단계';
+        element('gate-eyebrow').className = 'eyebrow' + (isCurrent ? ' gate-eyebrow-current' : '');
+        element('gate-title').textContent = stage.id.toUpperCase() + ' · ' + stage.name
+          + (isCurrent ? ' — 여기부터 채우면 다음 단계로 넘어가요' : isReady ? ' — 근거가 준비됐어요' : ' — 다음에 채울 단계예요');
+        element('gate-objective').textContent = stage.objective;
+        element('requirements').replaceChildren(...stage.gate.requirements.map(renderRequirement));
       }
 
       function renderRequirement(requirement) {
@@ -838,6 +866,7 @@ export function renderDashboard(): string {
       }
 
       function renderProcess(process) {
+        processStages = process.stages;
         const stages = element('stages');
         stages.replaceChildren(...process.stages.map(renderStage));
 
@@ -846,17 +875,10 @@ export function renderDashboard(): string {
         element('progress-fill').style.width = Math.round((done / process.totalStages) * 100) + '%';
         element('progress-text').textContent = done + ' / ' + process.totalStages;
 
-        const focus = process.stages.find((stage) => stage.id === process.currentStageId) || process.stages.at(-1);
-        if (!focus) return;
-        const isCurrent = Boolean(process.currentStageId);
-        element('gate-eyebrow').textContent = isCurrent ? '지금 확인할 단계' : '모든 단계 준비 완료';
-        element('gate-eyebrow').className = 'eyebrow' + (isCurrent ? ' gate-eyebrow-current' : '');
-        element('gate-title').textContent = isCurrent
-          ? focus.id.toUpperCase() + ' · ' + focus.name + ' — 여기부터 채우면 다음 단계로 넘어가요'
-          : '기획부터 배포까지 자동 근거가 모두 준비됐어요 🎉';
-        element('gate-objective').textContent = focus.objective;
-        const requirements = element('requirements');
-        requirements.replaceChildren(...focus.gate.requirements.map(renderRequirement));
+        // 다시 스캔해도 사용자가 보던 단계를 유지하되, 없으면 현재 단계로.
+        const keep = selectedStageId && process.stages.some((s) => s.id === selectedStageId) ? selectedStageId : null;
+        const initial = keep || process.currentStageId || (process.stages.at(-1) && process.stages.at(-1).id);
+        if (initial) showStageDetail(initial);
       }
 
       async function loadProject() {
