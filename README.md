@@ -44,6 +44,7 @@ pnpm exec beacon open
 | `beacon open` | `127.0.0.1:4300`에서 로컬 Dashboard를 엽니다. |
 | `beacon identity` | 현재 프로젝트의 이름, 경로와 Git 기준점을 확인합니다. |
 | `beacon cycle start "이름" --goal "목표"` | 현재 상태를 기준선으로 저장하고 새 Project Cycle을 시작합니다. |
+| `beacon cycle complete [--summary "요약"]` | 진행 중 Cycle을 종료하고 시작 대비 성과를 요약합니다. |
 | `beacon cycle status` | 현재 Cycle을 포함한 Project Journey를 확인합니다. |
 | `beacon export` | 현재 Snapshot과 누적 History로 `PROJECT_BOOK.md`를 만듭니다. |
 
@@ -87,4 +88,4 @@ fixtures/sample-project 외부 프로젝트 검증용 fixture
 docs                    제품·아키텍처·ADR·릴리스 기록
 ```
 
-제품 범위는 [PRODUCT](./docs/PRODUCT.md), 경계와 데이터 소유권은 [ARCHITECTURE](./docs/ARCHITECTURE.md), 변경점은 [CHANGELOG](./CHANGELOG.md)를 확인하세요.
+사용법은 [GUIDE](./docs/GUIDE.md), 제품 범위는 [PRODUCT](./docs/PRODUCT.md), 경계와 데이터 소유권은 [ARCHITECTURE](./docs/ARCHITECTURE.md), 변경점은 [CHANGELOG](./CHANGELOG.md), 배포 절차는 [PUBLISHING](./docs/releases/PUBLISHING.md)을 확인하세요.
