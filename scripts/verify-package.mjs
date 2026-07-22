@@ -109,7 +109,7 @@ try {
 
     const dashboardResponse = await fetch(runtime.url);
     assert.equal(dashboardResponse.status, 200);
-    assert.match(await dashboardResponse.text(), /Project Identity/);
+    assert.match(await dashboardResponse.text(), /프로젝트 정보/);
   } finally {
     runtime.child.kill("SIGTERM");
     await Promise.race([once(runtime.child, "exit"), new Promise((resolve) => setTimeout(resolve, 2_000))]);
