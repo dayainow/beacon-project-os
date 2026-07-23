@@ -1,4 +1,4 @@
-import { readProjectIdentity, readProjectJourney, scanProject } from "@beacon/core";
+import { assessDocument, readProjectIdentity, readProjectJourney, scanProject, type ArtifactKind } from "@beacon/core";
 import { renderDashboard } from "@beacon/dashboard";
 import { readFile, stat } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
@@ -49,6 +49,11 @@ export interface StartRuntimeOptions {
 export interface BeaconRuntime {
   server: Server;
   url: string;
+}
+
+const ARTIFACT_KINDS = new Set(["overview", "planning", "architecture", "quality", "release", "document"]);
+function isArtifactKind(value: string | null): value is ArtifactKind {
+  return value !== null && ARTIFACT_KINDS.has(value);
 }
 
 function sendJson(response: import("node:http").ServerResponse, status: number, value: unknown): void {
@@ -140,8 +145,13 @@ export async function startBeaconRuntime({
         return;
       }
       const result = await readViewableFile(root, requestedPath);
-      if (result.ok) sendJson(response, 200, { path: requestedPath, content: result.content });
-      else sendJson(response, result.status, { error: result.error });
+      if (result.ok) {
+        const kind = requestUrl.searchParams.get("kind");
+        const guidance = isArtifactKind(kind) ? assessDocument(kind, result.content) : null;
+        sendJson(response, 200, { path: requestedPath, content: result.content, guidance });
+      } else {
+        sendJson(response, result.status, { error: result.error });
+      }
       return;
     }
 
