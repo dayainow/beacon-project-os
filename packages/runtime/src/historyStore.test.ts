@@ -74,3 +74,27 @@ test("persists changed snapshots once and keeps append-only project history", as
   );
   assert.equal(store.history().changeCount, 6);
 });
+
+test("recovers from a corrupt beacon.db instead of crashing", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "beacon-corrupt-"));
+  await mkdir(path.join(root, ".beacon"));
+  const dbPath = path.join(root, ".beacon", "beacon.db");
+  // SQLite가 아닌 쓰레기 바이트를 심어 손상 상태를 만든다.
+  await writeFile(dbPath, "NOT A VALID SQLITE FILE — corrupted bytes");
+
+  // 예외 없이 열려야 한다(전에는 여기서 대시보드가 죽었다).
+  const store = new ProjectHistoryStore(root);
+  try {
+    const snapshot = await scanProject(root, new Date("2026-07-23T00:00:00.000Z"));
+    const result = store.record(snapshot);
+    // 재생성된 DB가 정상 동작한다.
+    assert.equal(result.recorded, true);
+    assert.equal(store.history().snapshotCount, 1);
+    // 손상 파일은 진단용으로 백업된다.
+    const backup = await stat(dbPath + ".corrupt.bak").then(() => true).catch(() => false);
+    const unreadableBackup = await stat(dbPath + ".unreadable.bak").then(() => true).catch(() => false);
+    assert.ok(backup || unreadableBackup, "손상 DB는 .bak으로 보존되어야 한다");
+  } finally {
+    store.close();
+  }
+});
