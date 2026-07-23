@@ -98,3 +98,39 @@ test("recovers from a corrupt beacon.db instead of crashing", async () => {
     store.close();
   }
 });
+
+test("accumulates all timeline events, not just the displayed cap", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "beacon-accum-"));
+  await mkdir(path.join(root, ".beacon"));
+  // 표시 상한(30)을 넘는 이벤트를 담은 스냅샷을 만든다.
+  const events = Array.from({ length: 45 }, (_, index) => ({
+    id: `commit:hash${index}`,
+    type: "commit" as const,
+    category: "implementation" as const,
+    occurredAt: new Date(Date.UTC(2026, 6, 1, 0, index)).toISOString(),
+    title: `commit ${index}`,
+    detail: "",
+    source: "git",
+    reference: `h${index}`,
+    relatedArtifacts: [],
+  }));
+  const snapshot = {
+    scannedAt: "2026-07-23T00:00:00.000Z",
+    observation: {
+      files: { total: 0, source: 0, tests: 0, config: 0, truncated: false, artifacts: [] },
+      git: { isRepository: true, root, branch: "main", head: "abc", changedFiles: [], recentCommits: [] },
+    },
+    health: { status: "on_track", score: 100, passedChecks: 5, totalChecks: 5, headline: "", signals: [] },
+    timeline: { events: events.slice(0, 30), total: events.length, truncated: true, all: events },
+    process: { templateId: "beacon-default-p0-p4-v1", currentStageId: null, readyStages: 5, totalStages: 5, stages: [] },
+  } as unknown as Parameters<ProjectHistoryStore["record"]>[0];
+
+  const store = new ProjectHistoryStore(root);
+  try {
+    store.record(snapshot);
+    // 표시는 30개로 잘려도 History에는 45개 전체가 쌓여야 한다.
+    assert.equal(store.history().timelineCount, 45);
+  } finally {
+    store.close();
+  }
+});

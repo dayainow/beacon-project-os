@@ -55,7 +55,7 @@ function snapshot(
       headline: "test",
       signals: [],
     },
-    timeline: { events: [], total: 0, truncated: false },
+    timeline: { events: [], total: 0, truncated: false, all: [] },
     process: {
       templateId: "beacon-default-p0-p4-v1",
       currentStageId: "p0",
