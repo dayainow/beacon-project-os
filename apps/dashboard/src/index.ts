@@ -220,6 +220,14 @@ export function renderDashboard(): string {
       .viewer-close { flex: none; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 14px; cursor: pointer; }
       .viewer-close:hover { border-color: var(--accent); color: var(--ink); }
       .viewer-body { overflow: auto; padding: 22px 26px 28px; }
+      .guidance { margin-bottom: 18px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+      .guidance-label { font-size: 12px; font-weight: 800; color: var(--accent-ink); margin-bottom: 8px; }
+      .guidance-ok { font-size: 13px; font-weight: 700; color: #0a6b47; }
+      .guidance-item { display: flex; flex-direction: column; gap: 2px; padding: 7px 0; border-top: 1px solid var(--line-soft); }
+      .guidance-item:first-of-type { border-top: 0; }
+      .guidance-item-label { font-size: 13px; font-weight: 700; }
+      .guidance-item-hint { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+      .guidance-present { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); font-size: 11.5px; color: var(--ink-faint); }
       .viewer-body.loading, .viewer-body.error { color: var(--ink-faint); font-size: 14px; }
       .md h1, .md h2, .md h3 { letter-spacing: -.02em; line-height: 1.3; margin: 20px 0 8px; }
       .md h1 { font-size: 22px; } .md h2 { font-size: 18px; } .md h3 { font-size: 15px; }
@@ -780,7 +788,29 @@ export function renderDashboard(): string {
         closeList();
       }
 
-      async function openFileViewer(path, name) {
+      // 문서 구성 점검 결과를 뷰어 상단에 부드러운 제안으로 보여준다(판정 아님).
+      function renderGuidance(body, guidance) {
+        if (!guidance || guidance.checks.length === 0) return;
+        const box = text('div', 'guidance', '');
+        if (guidance.missing.length === 0) {
+          const ok = text('div', 'guidance-ok', '구성이 잘 갖춰져 있어요.');
+          box.append(ok);
+        } else {
+          box.append(text('div', 'guidance-label', '이런 내용을 더하면 좋아요'));
+          guidance.missing.forEach((item) => {
+            const row = text('div', 'guidance-item', '');
+            row.append(text('span', 'guidance-item-label', item.label));
+            row.append(text('span', 'guidance-item-hint', item.suggestion));
+            box.append(row);
+          });
+        }
+        if (guidance.present.length > 0) {
+          box.append(text('div', 'guidance-present', '갖춤 · ' + guidance.present.map((c) => c.label).join(', ')));
+        }
+        body.insertBefore(box, body.firstChild);
+      }
+
+      async function openFileViewer(path, name, kind) {
         const viewer = element('viewer');
         element('viewer-title').textContent = name;
         element('viewer-path').textContent = path;
@@ -789,11 +819,12 @@ export function renderDashboard(): string {
         body.replaceChildren(document.createTextNode('문서를 불러오는 중…'));
         viewer.hidden = false;
         try {
-          const res = await fetch('/api/file?path=' + encodeURIComponent(path), { cache: 'no-store' });
+          const res = await fetch('/api/file?path=' + encodeURIComponent(path) + (kind ? '&kind=' + encodeURIComponent(kind) : ''), { cache: 'no-store' });
           if (!res.ok) throw new Error('load failed');
           const data = await res.json();
           body.className = 'viewer-body md';
           renderMarkdown(body, data.content, /\.(md|mdx)$/i.test(name));
+          renderGuidance(body, data.guidance);
         } catch {
           body.className = 'viewer-body error';
           body.replaceChildren(document.createTextNode('문서를 불러오지 못했어요. 파일이 프로젝트 폴더 안에 있는지 확인해 주세요.'));
@@ -808,7 +839,7 @@ export function renderDashboard(): string {
         if (canView) {
           const btn = text('button', 'afile-name afile-open', artifact.name);
           btn.type = 'button';
-          btn.addEventListener('click', () => openFileViewer(artifact.path, artifact.name));
+          btn.addEventListener('click', () => openFileViewer(artifact.path, artifact.name, artifact.kind));
           row.append(btn);
         } else {
           row.append(text('span', 'afile-name', artifact.name));
@@ -1067,7 +1098,7 @@ export function renderDashboard(): string {
             if (viewableExtRe.test(src)) {
               const btn = text('button', 'req-file', src);
               btn.type = 'button';
-              btn.addEventListener('click', () => openFileViewer(src, src.split('/').pop()));
+              btn.addEventListener('click', () => openFileViewer(src, src.split('/').pop(), artifact.kind));
               found.append(btn);
             } else {
               found.append(text('span', 'req-file-plain', src));
