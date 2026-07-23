@@ -188,6 +188,9 @@ export interface ProjectTimeline {
   events: TimelineEvent[];
   total: number;
   truncated: boolean;
+  // 표시용 events는 상한으로 자르지만, all은 자르지 않은 전체 목록이다.
+  // History 누적은 all을 사용해 스캔 사이에 오래된 이벤트가 누락되지 않게 한다.
+  all: TimelineEvent[];
 }
 
 export interface TimelineDay {
@@ -671,6 +674,7 @@ export function buildProjectTimeline(observation: ProjectObservation): ProjectTi
     events: allEvents.slice(0, MAX_TIMELINE_EVENTS),
     total: allEvents.length,
     truncated: allEvents.length > MAX_TIMELINE_EVENTS,
+    all: allEvents,
   };
 }
 

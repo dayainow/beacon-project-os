@@ -214,7 +214,10 @@ export class ProjectHistoryStore {
           event_key, occurred_at, occurred_at_ms, event_json
         ) VALUES (?, ?, ?, ?)
       `);
-      for (const event of snapshot.timeline.events) {
+      // 누적은 표시 상한으로 자르지 않은 전체(all)로 한다. 스캔 사이의 오래된
+      // 이벤트가 History에서 누락되지 않게. (구버전 스냅샷 호환을 위해 events로 폴백)
+      const timelineForHistory = snapshot.timeline.all ?? snapshot.timeline.events;
+      for (const event of timelineForHistory) {
         const eventKey = event.type === "commit" ? event.id : `${event.id}:${event.occurredAt}`;
         insertTimeline.run(
           eventKey,
