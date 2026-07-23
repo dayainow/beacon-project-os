@@ -7,6 +7,7 @@ export * from "./history.js";
 export * from "./journey.js";
 export * from "./process.js";
 export * from "./projectBook.js";
+export * from "./documentGuidance.js";
 
 export const BEACON_DIRECTORY = ".beacon";
 export const CONFIG_VERSION = 1;
